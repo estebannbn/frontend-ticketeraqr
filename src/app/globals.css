@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .categoria-form {
+    @apply bg-card text-card-foreground rounded-md shadow p-4 space-y-3;
+  }
+
+  .categoria-form label {
+    @apply block mb-1 text-sm font-medium;
+  }
+
+  .categoria-form input[type="text"] {
+    @apply w-full p-1.5 border rounded bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm;
+  }
+
+  .categoria-form .error-text {
+    @apply text-sm text-destructive mt-1;
+  }
+
+  .categoria-form .btn-primary {
+    @apply block w-full mt-2 px-3 py-1.5 text-sm text-white bg-primary rounded hover:bg-primary/90 disabled:bg-muted;
+  }
+
+  .categoria-form .btn-secondary {
+    @apply block w-full mt-2 px-3 py-1.5 text-sm text-gray-700 bg-secondary rounded hover:bg-secondary/80;
+  }
+
+  .categoria-table-wrapper {
+    @apply overflow-x-auto rounded-md shadow-sm border border-border;
+  }
+
+  .categoria-table {
+    @apply min-w-full divide-y divide-border text-sm;
+  }
+
+  .categoria-table thead {
+    @apply bg-secondary;
+  }
+
+  .categoria-table th {
+    @apply px-3 py-2 text-left font-medium text-foreground;
+  }
+
+  .categoria-table tbody {
+    @apply bg-background divide-y divide-border;
+  }
+
+  .categoria-table td {
+    @apply px-3 py-2 text-foreground align-middle;
+  }
+
+  .categoria-table td.flex-content {
+    @apply flex justify-between items-center;
+  }
+
+  .categoria-table tbody tr:last-child {
+    @apply border-b border-border;
+  }
+
+  .categoria-table button {
+    @apply text-xs font-medium transition-all duration-200;
+  }
+
+  .categoria-table .btn-edit {
+    @apply inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline;
+  }
+
+  .categoria-table .btn-delete {
+    @apply inline-flex items-center gap-1 text-red-600 hover:text-red-800 hover:underline;
+  }
+
+  @screen sm {
+    .categoria-form {
+      @apply p-5;
+    }
+
+    .categoria-form .form-buttons {
+      @apply flex-col sm:flex-row sm:gap-2 flex;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .categoria-table {
+      @apply block w-full;
+    }
+
+    .categoria-table thead {
+      @apply hidden;
+    }
+
+    .categoria-table tbody {
+      @apply block w-full;
+    }
+
+    .categoria-table tr {
+      @apply block border-b border-border mb-4;
+    }
+
+    .categoria-table td {
+      @apply block text-sm px-4 py-2;
+    }
+
+    .categoria-table td::before {
+      content: attr(data-label);
+      @apply block text-xs font-semibold text-muted-foreground mb-1;
+    }
+
+    .categoria-table td.acciones {
+      @apply flex items-center gap-4 px-4 py-2 mt-2;
+    }
+
+    .categoria-table td.acciones::before {
+      @apply hidden;
+    }
+
+    .categoria-table .btn-edit,
+    .categoria-table .btn-delete {
+      @apply text-sm px-2 py-1 rounded-md;
+    }
+  }
+}
