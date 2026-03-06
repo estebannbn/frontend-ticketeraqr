@@ -5,53 +5,84 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getClienteByUsuarioId } from "@/app/services/clientService";
-import { getOrganizacionByUsuarioId } from "@/app/services/organizacionService";
+
+const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/['"]/g, "");
 
 export default function Navbar() {
+
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const rol = user?.rol;
 
-  const [userName, setUserName] = useState<string>("");
+  const rol = user?.rol;
+  const userId = user?.idUsuario || (user as any)?.id;
+
+  const [userName, setUserName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const fetchedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const fetchUserName = async () => {
+    let isMounted = true;
 
-      if (!user) {
-        setUserName("");
+    const fetchUserName = async () => {
+      // Skip if no user data
+      if (!userId || !rol) {
+        if (isMounted) {
+          setUserName("");
+          setIsLoading(false);
+          fetchedRef.current = null;
+        }
         return;
       }
 
+      // Skip if already fetched for this user
+      const userKey = `${userId}-${rol}`;
+      if (fetchedRef.current === userKey && userName) {
+        return;
+      }
+
+      if (isMounted) {
+        setIsLoading(true);
+      }
+
       try {
+        let name = "";
 
-        const userId = user.idUsuario;
-
-        if (!userId) return;
-
-        if (user.rol === "CLIENTE") {
-          const clientData = await getClienteByUsuarioId(userId);
-          setUserName(`${clientData.nombre} ${clientData.apellido}`);
+        if (rol === "CLIENTE") {
+          const clientData = await getClienteByUsuarioId(Number(userId));
+          name = `${clientData.nombre} ${clientData.apellido}`;
+        } else if (rol === "ORGANIZACION") {
+          // Fetch directly from API instead of using server action
+          const res = await fetch(`${baseUrl}/api/organizaciones/usuario/${userId}`);
+          if (res.ok) {
+            const json = await res.json();
+            name = json.data?.nombre || "";
+          }
+        } else if (rol === "ADMIN") {
+          name = "Administrador";
         }
 
-        if (user.rol === "ORGANIZACION") {
-          const orgData = await getOrganizacionByUsuarioId(userId);
-          setUserName(orgData.nombre);
+        if (isMounted) {
+          setUserName(name);
+          setIsLoading(false);
+          fetchedRef.current = userKey;
         }
-
-        if (user.rol === "ADMIN") {
-          setUserName("Administrador");
-        }
-
       } catch (error) {
-        console.error("Error obteniendo nombre del usuario:", error);
+        console.error("Error obteniendo nombre:", error);
+        if (isMounted) {
+          setUserName("");
+          setIsLoading(false);
+        }
       }
     };
 
     fetchUserName();
 
-  }, [user]);
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, rol, userName]);
 
   if (pathname === "/login") return null;
 
@@ -71,9 +102,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           {/* LOGO */}
-
           <Link href="/" className="flex items-center gap-2">
-
             <Image
               src="/logo.png"
               alt="Logo"
@@ -82,12 +111,9 @@ export default function Navbar() {
               style={{ width: "auto", height: "40px" }}
               priority
             />
-
           </Link>
 
-
           {/* LINKS */}
-
           <div className="flex gap-8">
 
             {rol === "ORGANIZACION" && (
@@ -162,14 +188,11 @@ export default function Navbar() {
 
           </div>
 
-
           {/* DERECHA */}
-
           <div className="flex items-center gap-4">
 
             {user ? (
               <>
-
                 <Link
                   href="/perfil"
                   className="p-2 text-gray-600 hover:text-indigo-600 transition-colors bg-gray-50 rounded-full"
@@ -185,19 +208,16 @@ export default function Navbar() {
                 </button>
 
                 <div className="px-3 py-1 bg-gray-100 border border-gray-200 rounded text-sm font-semibold text-gray-700 max-w-[150px] truncate">
-                  {userName || "Cargando..."}
+                  {isLoading ? "Cargando..." : userName || "Usuario"}
                 </div>
-
               </>
             ) : (
-
               <Link
                 href="/login"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
               >
                 Ingresar
               </Link>
-
             )}
 
           </div>
