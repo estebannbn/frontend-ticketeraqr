@@ -68,10 +68,19 @@ export default function EventosPage() {
   const handleFormSubmit = async (data: EventoFormData) => {
     setLoading(true);
     try {
+      const parsedCapacidadMax = typeof data.capacidadMax === 'number' ? data.capacidadMax : parseInt(String(data.capacidadMax), 10) || 0;
+      const totalTicketsCapacity = tipoTickets.reduce((acc, t) => acc + t.cantMaxPorTipo, 0);
+
+      if (totalTicketsCapacity > parsedCapacidadMax) {
+        alert("La suma de la capacidad de los tipos de tickets no puede exceder la capacidad máxima del evento.");
+        setLoading(false);
+        return;
+      }
+
       // Create a type-safe copy of the event data
       const eventoData: EventoFormData = {
         ...data,
-        capacidadMax: typeof data.capacidadMax === 'number' ? data.capacidadMax : parseInt(String(data.capacidadMax), 10) || 0,
+        capacidadMax: parsedCapacidadMax,
         idCategoria: typeof data.idCategoria === 'number' ? data.idCategoria : parseInt(String(data.idCategoria), 10) || 1,
         idOrganizacion: organizacionId || 1, // Using the correct org ID from state
         fechaCreacion: data.fechaCreacion || new Date().toISOString(), // Inject current date if absent
@@ -113,6 +122,12 @@ export default function EventosPage() {
 
     setTipoTickets(prev => [...prev, typedTicket]);
     setShowTicketModal(false); // Close modal on submit
+  };
+
+  const handleRemoveTicket = (index: number) => {
+    if (window.confirm("¿Estás seguro que deseas eliminar este tipo de ticket?")) {
+      setTipoTickets(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const handleCambiarFecha = async (id: number, nuevaFecha: string) => {
@@ -199,6 +214,7 @@ export default function EventosPage() {
               onSubmit={handleFormSubmit}
               loading={loading}
               tipoTickets={tipoTickets}
+              onRemoveTicket={handleRemoveTicket}
             />
 
             <button

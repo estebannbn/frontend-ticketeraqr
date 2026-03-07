@@ -27,6 +27,7 @@ interface EventoFormProps {
   onCancel?: () => void;
   loading: boolean;
   tipoTickets: { tipo: string; acceso: string; precio: number; cantMaxPorTipo: number }[];
+  onRemoveTicket?: (index: number) => void;
 }
 
 export const EventoForm: React.FC<EventoFormProps> = ({
@@ -36,6 +37,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   onCancel,
   loading,
   tipoTickets,
+  onRemoveTicket,
 }) => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
 
@@ -57,7 +59,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
       descripcion: "",
       ubicacion: "",
       foto: "",
-      capacidadMax: 0,
+      capacidadMax: "" as unknown as number,
       tipoTickets: [],
       idCategoria: 1,
       idOrganizacion: 1,
@@ -252,10 +254,22 @@ export const EventoForm: React.FC<EventoFormProps> = ({
           <h4 className="text-sm font-bold text-blue-900 mb-2">Tipos de Ticket Agregados:</h4>
           <ul className="space-y-2">
             {tipoTickets.map((ticket, index) => (
-              <li key={index} className="text-sm flex justify-between bg-white px-3 py-2 rounded shadow-sm">
-                <span className="font-semibold text-gray-700">{ticket.tipo} ({ticket.acceso})</span>
-                <span className="text-green-600 font-bold">${ticket.precio}</span>
-                <span className="text-gray-500 text-xs ml-2">Cant: {ticket.cantMaxPorTipo}</span>
+              <li key={index} className="text-sm flex justify-between items-center bg-white px-3 py-2 rounded shadow-sm">
+                <div>
+                  <span className="font-semibold text-gray-700">{ticket.tipo} ({ticket.acceso})</span>
+                  <span className="text-green-600 font-bold ml-2">${ticket.precio}</span>
+                  <span className="text-gray-500 text-xs ml-2">Cant: {ticket.cantMaxPorTipo}</span>
+                </div>
+                {onRemoveTicket && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveTicket(index)}
+                    className="text-red-500 hover:text-red-700 p-1 font-bold text-lg"
+                    title="Eliminar ticket"
+                  >
+                    ✕
+                  </button>
+                )}
               </li>
             ))}
           </ul>
