@@ -36,7 +36,10 @@ export async function createEvento(data: EventoFormData): Promise<Evento> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Error al crear evento");
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Error al crear evento");
+  }
   const json = (await res.json()) as ApiResponse<Evento>;
   return json.data;
 }

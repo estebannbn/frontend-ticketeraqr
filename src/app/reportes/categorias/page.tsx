@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getReporteCategoria } from "@/app/services/categoriaService";
+import { getEstadisticasEventos } from "@/app/services/estadisticaService";
+import { getCategorias } from "@/app/services/categoriaService";
 import { getOrganizacionByUsuarioId } from "@/app/services/organizacionService";
 import Footer from "@/app/components/footer";
 import { BarChart3, PieChart as PieChartIcon, Table as TableIcon, LayoutDashboard } from "lucide-react";
@@ -32,8 +33,30 @@ export default function ReporteCategoriasPage() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const result = await getReporteCategoria(idOrg || undefined);
-                setData(result);
+                const [statsRes, categoriasRes] = await Promise.all([
+                    getEstadisticasEventos(idOrg || undefined),
+                    getCategorias()
+                ]);
+
+                const eventos = (statsRes as any).data?.eventos || statsRes.eventos || [];
+
+                // Aggregating Data in the Frontend
+                const categoryStats = categoriasRes.map(cat => {
+                    const eventosDeCat = eventos.filter((e: any) => e.idCategoria === cat.idCategoria);
+                    const cantidadEventos = eventosDeCat.length;
+                    const ticketsVendidos = eventosDeCat.reduce((sum: number, e: any) => sum + e.vendidos, 0);
+                    const recaudacionTotal = eventosDeCat.reduce((sum: number, e: any) => sum + e.recaudacion, 0);
+
+                    return {
+                        idCategoria: cat.idCategoria,
+                        nombre: cat.nombreCategoria,
+                        cantidadEventos,
+                        ticketsVendidos,
+                        recaudacionTotal
+                    };
+                }).filter(cat => cat.cantidadEventos > 0).sort((a, b) => b.ticketsVendidos - a.ticketsVendidos);
+
+                setData(categoryStats);
             } catch (error) {
                 console.error("Error fetching category report:", error);
             } finally {

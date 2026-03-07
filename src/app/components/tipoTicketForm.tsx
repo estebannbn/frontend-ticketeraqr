@@ -20,8 +20,8 @@ export const TipoTicketForm: React.FC<TipoTicketFormProps> = ({
     tipo: "",
     acceso: "",
     sector: "",
-    precio: 0,
-    cantMaxPorTipo: 0,
+    precio: "" as unknown as number,
+    cantMaxPorTipo: "" as unknown as number,
   });
 
   useEffect(() => {
@@ -46,8 +46,8 @@ export const TipoTicketForm: React.FC<TipoTicketFormProps> = ({
       tipo: "",
       acceso: "",
       sector: "",
-      precio: 0,
-      cantMaxPorTipo: 0,
+      precio: "" as unknown as number,
+      cantMaxPorTipo: "" as unknown as number,
     });
   };
 

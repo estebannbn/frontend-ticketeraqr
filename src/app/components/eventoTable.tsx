@@ -187,22 +187,30 @@ export const EventoTable: React.FC<EventoTableProps> = ({
                     <>
                       <button
                         onClick={() => openDateModal(evento)}
-                        className="text-blue-600 hover:text-blue-800 mr-2"
+                        className="text-blue-600 hover:text-blue-800 mr-2 font-medium"
                       >
                         Cambiar fecha
                       </button>
 
                       <button
                         onClick={() => onCancel(evento.idEvento)}
-                        className="text-orange-600 hover:text-orange-800 mr-2"
+                        className="text-orange-600 hover:text-orange-800 mr-2 font-medium"
                       >
                         Cancelar
                       </button>
                     </>
                   ) : (
-                    <span className="text-gray-500 italic text-sm">
-                      Sin acciones
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-500 italic text-sm">
+                        Sin acciones
+                      </span>
+                      <button
+                        onClick={() => onDelete(evento.idEvento)}
+                        className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   )}
                 </td>
               </tr>

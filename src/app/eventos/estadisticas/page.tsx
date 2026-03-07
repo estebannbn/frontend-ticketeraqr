@@ -8,12 +8,16 @@ import { useAuth } from "@/context/AuthContext";
 import { Categoria } from "@/types/categoria";
 import { EstadisticasResponse, EstadisticaEvento } from "@/types/evento";
 import EventoEstadisticasTable from "@/app/components/eventoEstadisticasTable";
+import VentasChart from "@/app/components/VentasChart";
+import { getVentasReport, ReporteHora } from "@/app/services/eventosService";
 
 export default function EstadisticasPage() {
   const { user } = useAuth();
   const [allData, setAllData] = useState<EstadisticasResponse | null>(null);
   const [filteredEventos, setFilteredEventos] = useState<EstadisticaEvento[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [ventasHora, setVentasHora] = useState<ReporteHora[]>([]);
+  const [idOrganizacion, setIdOrganizacion] = useState<number | undefined>(undefined);
 
   const [search, setSearch] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
@@ -26,15 +30,19 @@ export default function EstadisticasPage() {
       if (user?.rol === "ORGANIZACION" && user.idUsuario) {
         const orgData = await getOrganizacionByUsuarioId(Number(user.idUsuario));
         idOrg = orgData.idOrganizacion;
+        setIdOrganizacion(idOrg);
       }
 
-      const [statsRes, catsRes] = await Promise.all([
+      const [statsRes, catsRes, ventasRes] = await Promise.all([
         getEstadisticasEventos(idOrg),
-        getCategorias()
+        getCategorias(),
+        getVentasReport({ idOrganizacion: idOrg })
       ]);
-      setAllData(statsRes);
-      setFilteredEventos(statsRes.eventos);
+      const actualStats = (statsRes as any).data || statsRes;
+      setAllData(actualStats);
+      setFilteredEventos(actualStats.eventos || []);
       setCategorias(catsRes);
+      setVentasHora(ventasRes || []);
     } catch (err) {
       console.error(err);
     }
@@ -47,7 +55,7 @@ export default function EstadisticasPage() {
   useEffect(() => {
     if (!allData) return;
 
-    let eventosFiltrados = allData.eventos;
+    let eventosFiltrados = allData.eventos || [];
 
     if (search) {
       eventosFiltrados = eventosFiltrados.filter((e) =>
@@ -70,7 +78,22 @@ export default function EstadisticasPage() {
     }
 
     setFilteredEventos(eventosFiltrados);
-  }, [search, fechaInicio, fechaFin, categoria, allData]);
+
+    const fetchFilteredChart = async () => {
+      try {
+        const data = await getVentasReport({
+          idOrganizacion,
+          fechaInicio: fechaInicio || undefined,
+          fechaFin: fechaFin || undefined,
+          idCategoria: categoria ? categoria.toString() : undefined
+        });
+        setVentasHora(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchFilteredChart();
+  }, [search, fechaInicio, fechaFin, categoria, allData, idOrganizacion]);
 
   if (!allData)
     return (
@@ -193,12 +216,19 @@ export default function EstadisticasPage() {
           </div>
         </div>
 
+        {/* Gráfico de Ventas */}
+        <div className="bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-2xl font-semibold text-blue-700 mb-4">📈 Ventas por Hora</h2>
+          <VentasChart data={ventasHora} type="cantidad" />
+        </div>
+
         {/* Tabla de eventos */}
         <div className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-2xl font-semibold text-blue-700 mb-4">📅 Eventos</h2>
           <EventoEstadisticasTable
             eventos={filteredEventos}
-            totalEventos={allData.eventos.length}
+            totalEventos={allData.eventos?.length || 0}
+            categorias={categorias}
           />
         </div>
       </div>

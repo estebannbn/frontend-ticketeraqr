@@ -2,13 +2,15 @@
 
 import React, { useState } from "react";
 import { EstadisticaEvento } from "@/types/evento";
+import { Categoria } from "@/types/categoria";
 
 interface Props {
   eventos: EstadisticaEvento[];
   totalEventos: number;
+  categorias?: Categoria[];
 }
 
-export default function EventoEstadisticasTable({ eventos, totalEventos }: Props) {
+export default function EventoEstadisticasTable({ eventos, totalEventos, categorias = [] }: Props) {
   const [paginaActual, setPaginaActual] = useState(1);
   const eventosPorPagina = 5;
 
@@ -41,29 +43,32 @@ export default function EventoEstadisticasTable({ eventos, totalEventos }: Props
             </thead>
             <tbody>
               {eventosPagina.length > 0 ? (
-                eventosPagina.map((e, i) => (
-                  <tr
-                    key={`evento-${i}`}
-                    className="odd:bg-white even:bg-blue-50 hover:bg-blue-100 transition-colors"
-                  >
-                    <td className="px-4 py-3 text-gray-800">{e.nombre}</td>
-                    <td className="px-4 py-3 text-center text-gray-700">
-                      {new Date(e.fecha).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-center font-medium text-blue-700">
-                      {e.vendidos}
-                    </td>
-                    <td className="px-4 py-3 text-center text-red-600">
-                      {e.reembolsados}
-                    </td>
-                    <td className="px-4 py-3 text-center font-semibold text-green-700">
-                      ${e.recaudacion}
-                    </td>
-                    <td className="px-4 py-3 text-center text-gray-600">
-                      ID: {e.idCategoria}
-                    </td>
-                  </tr>
-                ))
+                eventosPagina.map((e, i) => {
+                  const categoriaName = categorias.find(c => c.idCategoria === e.idCategoria)?.nombreCategoria || `ID: ${e.idCategoria}`;
+                  return (
+                    <tr
+                      key={`evento-${i}`}
+                      className="odd:bg-white even:bg-blue-50 hover:bg-blue-100 transition-colors"
+                    >
+                      <td className="px-4 py-3 text-gray-800">{e.nombre}</td>
+                      <td className="px-4 py-3 text-center text-gray-700">
+                        {new Date(e.fecha).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-center font-medium text-blue-700">
+                        {e.vendidos}
+                      </td>
+                      <td className="px-4 py-3 text-center text-red-600">
+                        {e.reembolsados}
+                      </td>
+                      <td className="px-4 py-3 text-center font-semibold text-green-700">
+                        ${e.recaudacion}
+                      </td>
+                      <td className="px-4 py-3 text-center font-medium text-gray-600 uppercase">
+                        {categoriaName}
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={6} className="text-center py-6 text-gray-500">

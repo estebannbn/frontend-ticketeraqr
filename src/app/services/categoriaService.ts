@@ -64,12 +64,3 @@ export async function deleteCategoria(id: number): Promise<null> {
   const json = (await res.json()) as ApiResponse<null>;
   return json.data;
 }
-export async function getReporteCategoria(idOrganizacion?: number): Promise<any> {
-  const url = idOrganizacion
-    ? `${baseUrl}/api/eventos/reporte-categoria?idOrganizacion=${idOrganizacion}`
-    : `${baseUrl}/api/eventos/reporte-categoria`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Error al obtener reporte de categorías");
-  const json = (await res.json()) as ApiResponse<any>;
-  return json.data;
-}
