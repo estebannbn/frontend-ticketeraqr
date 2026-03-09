@@ -17,8 +17,13 @@ export default function Home() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [filteredEventos, setFilteredEventos] = useState<Evento[]>([]);
   const [selectedCategoria, setSelectedCategoria] = useState<string>("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const rol = user?.rol;
+
+  // Obtener fecha de hoy en formato YYYY-MM-DD según la hora local de Argentina
+  const hoyStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 
   const loadData = async () => {
     try {
@@ -41,12 +46,26 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (selectedCategoria === "all") {
-      setFilteredEventos(eventos);
-    } else {
-      setFilteredEventos(eventos.filter(e => e.idCategoria === parseInt(selectedCategoria)));
+    let result = eventos;
+
+    if (selectedCategoria !== "all") {
+      result = result.filter(e => e.idCategoria === parseInt(selectedCategoria));
     }
-  }, [selectedCategoria, eventos]);
+
+    if (startDate) {
+      const startParts = startDate.split("-");
+      const start = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]), 0, 0, 0);
+      result = result.filter(e => new Date(e.fechaHoraEvento) >= start);
+    }
+
+    if (endDate) {
+      const endParts = endDate.split("-");
+      const end = new Date(parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]), 23, 59, 59, 999);
+      result = result.filter(e => new Date(e.fechaHoraEvento) <= end);
+    }
+
+    setFilteredEventos(result);
+  }, [selectedCategoria, startDate, endDate, eventos]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50/50">
@@ -145,9 +164,25 @@ export default function Home() {
               </select>
             </div>
 
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white border rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-blue-200 transition-all shadow-sm">Hoy</button>
-              <button className="px-4 py-2 bg-white border rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-blue-200 transition-all shadow-sm">Este finde</button>
+            <div className="flex gap-2 items-center bg-white border rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <input
+                type="date"
+                className="bg-transparent border-none text-sm font-medium text-gray-600 outline-none cursor-pointer"
+                value={startDate}
+                min={hoyStr}
+                onChange={(e) => setStartDate(e.target.value)}
+                title="Fecha desde"
+              />
+              <span className="text-gray-400 text-sm">-</span>
+              <input
+                type="date"
+                className="bg-transparent border-none text-sm font-medium text-gray-600 outline-none cursor-pointer"
+                value={endDate}
+                min={startDate || hoyStr}
+                onChange={(e) => setEndDate(e.target.value)}
+                title="Fecha hasta"
+              />
             </div>
           </div>
         </div>
