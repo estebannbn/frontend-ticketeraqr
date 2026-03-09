@@ -39,6 +39,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     handleSubmit,
     setValue,
     setError,
+    reset,
     formState: { errors },
   } = useForm<Categoria>({
     resolver: zodResolver(categoriaSchema),
@@ -59,6 +60,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     try {
       setGeneralError("");
       await onSubmit(data);
+      if (!isEditing) reset({ nombreCategoria: "" });
     } catch (err: any) {
 
       if (err.isValidationError && err.details) {
@@ -98,6 +100,12 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
           id="nombreCategoria"
           placeholder="Ej: Vacunas, Alimentos, Accesorios..."
           {...register("nombreCategoria")}
+          onInput={(e) => {
+            const target = e.target as HTMLInputElement;
+            if (target.value.length > 0) {
+              target.value = target.value.charAt(0).toUpperCase() + target.value.slice(1).toLowerCase();
+            }
+          }}
           className={`w-full p-2 border rounded outline-none transition 
           ${errors.nombreCategoria
               ? "border-red-500 focus:ring-2 focus:ring-red-200"
