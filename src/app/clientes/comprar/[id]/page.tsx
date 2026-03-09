@@ -15,6 +15,7 @@ import Link from "next/link";
 import TicketQr from "../../../components/ticketsQR";
 import { useAuth } from "@/context/AuthContext";
 import AuthModal from "@/app/components/ui/AuthModal";
+import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 
 export default function PurchasePage() {
     const { user, isAuthenticated } = useAuth();
@@ -23,19 +24,17 @@ export default function PurchasePage() {
     const [evento, setEvento] = useState<Evento | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedTipo, setSelectedTipo] = useState<TipoTicket | null>(null);
-    const [metodoPago, setMetodoPago] = useState<"tarjeta" | "mercadopago">("tarjeta");
     const [purchasing, setPurchasing] = useState(false);
     const [purchasedTicket, setPurchasedTicket] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [preferenceId, setPreferenceId] = useState<string | null>(null);
+    const [pendingTicketId, setPendingTicketId] = useState<number | null>(null);
 
-    // Estado del formulario de tarjeta
-    const [cardData, setCardData] = useState({
-        numero: "",
-        nombre: "",
-        vencimiento: "",
-        cvv: ""
-    });
+    useEffect(() => {
+        const mpKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || "TEST-8c269094-0ea3-455b-abb7-ce3ebd1b4df0";
+        initMercadoPago(mpKey, { locale: "es-AR" });
+    }, []);
 
     useEffect(() => {
         if (id) {
@@ -67,43 +66,7 @@ export default function PurchasePage() {
             return;
         }
 
-        // Validación simple de tarjeta - SOLO si el método de pago es tarjeta
-        if (metodoPago === "tarjeta") {
-            const numeroLimpio = cardData.numero.replace(/\s/g, ''); // Eliminar espacios
-            if (!numeroLimpio || numeroLimpio.length < 16) {
-                setError("Por favor ingresa un número de tarjeta válido (16 dígitos).");
-                return;
-            }
-            if (!cardData.nombre) {
-                setError("Por favor ingresa el nombre del titular.");
-                return;
-            }
-            if (!cardData.vencimiento || !cardData.vencimiento.includes('/')) {
-                setError("Por favor ingresa una fecha de vencimiento válida (MM/AA).");
-                return;
-            }
 
-            // Validar vencimiento
-            const [mes, anio] = cardData.vencimiento.split('/');
-            const mesNum = parseInt(mes, 10);
-            const anioNum = parseInt(`20${anio}`, 10);
-            const fechaActual = new Date();
-            const fechaVencimiento = new Date(anioNum, mesNum, 0); // Último día del mes de vencimiento
-
-            if (isNaN(mesNum) || isNaN(anioNum) || mesNum < 1 || mesNum > 12) {
-                setError("Fecha de vencimiento inválida.");
-                return;
-            }
-
-            if (fechaVencimiento < fechaActual) {
-                setError("Tu tarjeta está vencida.");
-                return;
-            }
-            if (!cardData.cvv || cardData.cvv.length < 3) {
-                setError("Por favor ingresa un CVV válido.");
-                return;
-            }
-        }
 
         try {
             setPurchasing(true);
@@ -129,16 +92,17 @@ export default function PurchasePage() {
 
             const response = await crearTicket({
                 idCliente: cliente.idCliente,
-                idTipoTicket: selectedTipo.idTipoTicket,
-                metodoPago: metodoPago
+                idTipoTicket: selectedTipo.idTipoTicket
             });
 
-            if (response.data.init_point) {
+            if (response.data.preferenceId) {
+                setPreferenceId(response.data.preferenceId);
+                setPendingTicketId(response.data.ticket.nroTicket);
+            } else if (response.data.init_point) {
                 // Redirigir a Mercado Pago
                 window.location.href = response.data.init_point;
             } else {
-                // Pago con tarjeta exitoso, redirigir a página de éxito
-                router.push("/pago-exitoso");
+                setError("Error al iniciar el pago con Mercado Pago.");
             }
         } catch (err: unknown) {
             setError((err as Error).message || "Error al procesar la compra. Por favor, reintenta.");
@@ -147,10 +111,33 @@ export default function PurchasePage() {
         }
     };
 
-    const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCardData({
-            ...cardData,
-            [e.target.name]: e.target.value
+    const onSubmitBrick = async (formData: any) => {
+        return new Promise<void>((resolve, reject) => {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/tickets/procesar-pago`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    nroTicket: pendingTicketId,
+                    formData: formData,
+                }),
+            })
+                .then((response) => response.json())
+                .then((response) => {
+                    if (response.error) {
+                        setError(response.message || "Error al procesar el pago");
+                        reject();
+                    } else {
+                        // Payment success
+                        setPurchasedTicket(response.data.ticket);
+                        resolve();
+                    }
+                })
+                .catch((error) => {
+                    setError("Error de red al procesar el pago");
+                    reject();
+                });
         });
     };
 
@@ -287,6 +274,46 @@ export default function PurchasePage() {
                                 <h3 className="text-2xl font-bold text-red-700 mb-4">Evento Cancelado</h3>
                                 <p className="text-red-600 font-medium">Este evento ha sido cancelado por la organización y la venta de entradas de este evento se ha cerrado. Se realizarán reembolsos automáticos.</p>
                             </div>
+                        ) : preferenceId ? (
+                            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
+                                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 border-b pb-4">
+                                    <CreditCard className="w-6 h-6 text-blue-600" />
+                                    Completar Pago Seguro
+                                </h3>
+                                <CardPayment
+                                    initialization={{
+                                        amount: Number(selectedTipo?.precio || 0),
+                                        payer: {
+                                            email: user?.mail || "",
+                                        }
+                                    }}
+                                    customization={{
+                                        paymentMethods: {
+                                            maxInstallments: 1,
+                                        },
+                                        visual: {
+                                            style: {
+                                                theme: "default",
+                                            }
+                                        }
+                                    }}
+                                    onSubmit={onSubmitBrick}
+                                    onReady={() => console.log('Card Payment Brick is ready')}
+                                    onError={(error) => {
+                                        console.error(error);
+                                        setError("Error en el componente de pago");
+                                    }}
+                                />
+                                <button
+                                    onClick={() => {
+                                        setPreferenceId(null);
+                                        setPendingTicketId(null);
+                                    }}
+                                    className="mt-6 w-full py-3 text-red-500 font-medium hover:text-red-700 hover:bg-red-50 rounded-xl transition-all"
+                                >
+                                    Cancelar y volver atrás
+                                </button>
+                            </div>
                         ) : (
                             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
                                 <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -316,86 +343,17 @@ export default function PurchasePage() {
                                     ))}
                                 </div>
 
-                                {/* Payment Method */}
+                                {/* Payment Method Info */}
                                 <div className="space-y-4 mb-8 pt-4 border-t border-gray-100">
                                     <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setMetodoPago("tarjeta")}
-                                            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${metodoPago === "tarjeta" ? "border-blue-600 bg-blue-50" : "border-gray-100 hover:border-gray-50"
-                                                }`}
-                                        >
-                                            <CreditCard className={`w-6 h-6 mb-2 ${metodoPago === "tarjeta" ? "text-blue-600" : "text-gray-400"}`} />
-                                            <span className={`text-xs font-bold ${metodoPago === "tarjeta" ? "text-blue-600" : "text-gray-600"}`}>Tarjeta</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setMetodoPago("mercadopago")}
-                                            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${metodoPago === "mercadopago" ? "border-sky-500 bg-sky-50" : "border-gray-100 hover:border-gray-50"
-                                                }`}
-                                        >
-                                            <div className={`w-6 h-6 mb-2 flex items-center justify-center text-lg font-black ${metodoPago === "mercadopago" ? "text-sky-600" : "text-gray-400"}`}>M</div>
-                                            <span className={`text-xs font-bold ${metodoPago === "mercadopago" ? "text-sky-600" : "text-gray-600"}`}>Mercado Pago</span>
-                                        </button>
+                                    <div className="bg-sky-50 border-2 border-sky-500 rounded-xl p-4 flex items-center justify-center">
+                                        <div className="w-6 h-6 mr-3 flex items-center justify-center text-lg font-black text-sky-600">M</div>
+                                        <span className="text-sm font-bold text-sky-600 uppercase">Mercado Pago</span>
                                     </div>
+                                    <p className="text-xs text-gray-500 text-center mt-2">
+                                        Serás redirigido a Mercado Pago para completar tu compra de forma segura.
+                                    </p>
                                 </div>
-
-                                {metodoPago === "tarjeta" && (
-                                    <div className="space-y-4 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-700 uppercase">Número de Tarjeta</label>
-                                            <div className="relative">
-                                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    name="numero"
-                                                    placeholder="0000 0000 0000 0000"
-                                                    value={cardData.numero}
-                                                    onChange={handleCardChange}
-                                                    maxLength={19}
-                                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono bg-white text-gray-900"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-700 uppercase">Titular</label>
-                                            <input
-                                                type="text"
-                                                name="nombre"
-                                                placeholder="Nombre como figura en la tarjeta"
-                                                value={cardData.nombre}
-                                                onChange={handleCardChange}
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-gray-900"
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <label className="text-xs font-bold text-gray-700 uppercase">Fecha Vto</label>
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="vencimiento"
-                                                placeholder="MM/AA"
-                                                value={cardData.vencimiento}
-                                                onChange={handleCardChange}
-                                                maxLength={5}
-                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-center bg-white text-gray-900"
-                                            />
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-700 uppercase">CVV</label>
-                                                <input
-                                                    type="password"
-                                                    name="cvv"
-                                                    placeholder="123"
-                                                    value={cardData.cvv}
-                                                    onChange={handleCardChange}
-                                                    maxLength={4}
-                                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-center bg-white text-gray-900"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
 
                                 {error && (
                                     <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm mb-6 flex items-start gap-2">
@@ -417,12 +375,12 @@ export default function PurchasePage() {
                                         {purchasing ? (
                                             <>
                                                 <Loader2 className="w-6 h-6 animate-spin" />
-                                                Procesando...
+                                                Preparando pago...
                                             </>
                                         ) : (
                                             <>
                                                 <CreditCard className="w-6 h-6" />
-                                                Confirmar Compra
+                                                Ir a Pagar
                                             </>
                                         )}
                                     </button>
