@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Evento, TipoTicket } from "@/types/evento";
 import { getEventoById } from "@/app/services/eventosService";
@@ -15,12 +15,13 @@ import Link from "next/link";
 import TicketQr from "../../../components/ticketsQR";
 import { useAuth } from "@/context/AuthContext";
 import AuthModal from "@/app/components/ui/AuthModal";
-import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
+import { initMercadoPago, Wallet } from "@mercadopago/sdk-react";
 
 export default function PurchasePage() {
     const { user, isAuthenticated } = useAuth();
     const { id } = useParams();
     const router = useRouter();
+    const fetchingPreferenceFor = useRef<number | null>(null);
     const [evento, setEvento] = useState<Evento | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedTipo, setSelectedTipo] = useState<TipoTicket | null>(null);
@@ -29,7 +30,6 @@ export default function PurchasePage() {
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [preferenceId, setPreferenceId] = useState<string | null>(null);
-    const [pendingTicketId, setPendingTicketId] = useState<number | null>(null);
 
     useEffect(() => {
         const mpKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || "TEST-8c269094-0ea3-455b-abb7-ce3ebd1b4df0";
@@ -58,8 +58,16 @@ export default function PurchasePage() {
         }
     };
 
+    useEffect(() => {
+        if (selectedTipo && isAuthenticated && fetchingPreferenceFor.current !== selectedTipo.idTipoTicket) {
+            fetchingPreferenceFor.current = selectedTipo.idTipoTicket;
+            handlePurchase();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedTipo, isAuthenticated]);
+
     const handlePurchase = async () => {
-        if (!selectedTipo || !evento) return;
+        if (!selectedTipo || !evento || purchasing) return;
 
         if (!isAuthenticated) {
             setIsAuthModalOpen(true);
@@ -97,9 +105,8 @@ export default function PurchasePage() {
 
             if (response.data.preferenceId) {
                 setPreferenceId(response.data.preferenceId);
-                setPendingTicketId(response.data.ticket.nroTicket);
             } else if (response.data.init_point) {
-                // Redirigir a Mercado Pago
+                // Fallback a redirección manual
                 window.location.href = response.data.init_point;
             } else {
                 setError("Error al iniciar el pago con Mercado Pago.");
@@ -109,36 +116,6 @@ export default function PurchasePage() {
         } finally {
             setPurchasing(false);
         }
-    };
-
-    const onSubmitBrick = async (formData: any) => {
-        return new Promise<void>((resolve, reject) => {
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/tickets/procesar-pago`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    nroTicket: pendingTicketId,
-                    formData: formData,
-                }),
-            })
-                .then((response) => response.json())
-                .then((response) => {
-                    if (response.error) {
-                        setError(response.message || "Error al procesar el pago");
-                        reject();
-                    } else {
-                        // Payment success
-                        setPurchasedTicket(response.data.ticket);
-                        resolve();
-                    }
-                })
-                .catch((error) => {
-                    setError("Error de red al procesar el pago");
-                    reject();
-                });
-        });
     };
 
     if (loading) {
@@ -274,46 +251,6 @@ export default function PurchasePage() {
                                 <h3 className="text-2xl font-bold text-red-700 mb-4">Evento Cancelado</h3>
                                 <p className="text-red-600 font-medium">Este evento ha sido cancelado por la organización y la venta de entradas de este evento se ha cerrado. Se realizarán reembolsos automáticos.</p>
                             </div>
-                        ) : preferenceId ? (
-                            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
-                                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 border-b pb-4">
-                                    <CreditCard className="w-6 h-6 text-blue-600" />
-                                    Completar Pago Seguro
-                                </h3>
-                                <CardPayment
-                                    initialization={{
-                                        amount: Number(selectedTipo?.precio || 0),
-                                        payer: {
-                                            email: user?.mail || "",
-                                        }
-                                    }}
-                                    customization={{
-                                        paymentMethods: {
-                                            maxInstallments: 1,
-                                        },
-                                        visual: {
-                                            style: {
-                                                theme: "default",
-                                            }
-                                        }
-                                    }}
-                                    onSubmit={onSubmitBrick}
-                                    onReady={() => console.log('Card Payment Brick is ready')}
-                                    onError={(error) => {
-                                        console.error(error);
-                                        setError("Error en el componente de pago");
-                                    }}
-                                />
-                                <button
-                                    onClick={() => {
-                                        setPreferenceId(null);
-                                        setPendingTicketId(null);
-                                    }}
-                                    className="mt-6 w-full py-3 text-red-500 font-medium hover:text-red-700 hover:bg-red-50 rounded-xl transition-all"
-                                >
-                                    Cancelar y volver atrás
-                                </button>
-                            </div>
                         ) : (
                             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
                                 <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -343,18 +280,6 @@ export default function PurchasePage() {
                                     ))}
                                 </div>
 
-                                {/* Payment Method Info */}
-                                <div className="space-y-4 mb-8 pt-4 border-t border-gray-100">
-                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Método de Pago</h4>
-                                    <div className="bg-sky-50 border-2 border-sky-500 rounded-xl p-4 flex items-center justify-center">
-                                        <div className="w-6 h-6 mr-3 flex items-center justify-center text-lg font-black text-sky-600">M</div>
-                                        <span className="text-sm font-bold text-sky-600 uppercase">Mercado Pago</span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 text-center mt-2">
-                                        Serás redirigido a Mercado Pago para completar tu compra de forma segura.
-                                    </p>
-                                </div>
-
                                 {error && (
                                     <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm mb-6 flex items-start gap-2">
                                         <span className="font-bold">Error:</span> {error}
@@ -362,30 +287,42 @@ export default function PurchasePage() {
                                 )}
 
                                 <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <div className="flex justify-between items-center text-lg">
+                                    <div className="flex justify-between items-center text-lg mb-4">
                                         <span className="text-gray-600">Total</span>
                                         <span className="text-3xl font-black text-gray-900">${selectedTipo?.precio || 0}</span>
                                     </div>
 
-                                    <button
-                                        onClick={handlePurchase}
-                                        disabled={purchasing || !selectedTipo}
-                                        className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200 disabled:bg-gray-200 disabled:shadow-none flex items-center justify-center gap-3"
-                                    >
+                                    <div className="w-full">
                                         {purchasing ? (
-                                            <>
-                                                <Loader2 className="w-6 h-6 animate-spin" />
-                                                Preparando pago...
-                                            </>
+                                            <div className="flex items-center justify-center py-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+                                                <span className="text-gray-500 font-medium">Preparando pago seguro...</span>
+                                            </div>
+                                        ) : !isAuthenticated ? (
+                                            <div className="flex flex-col gap-3">
+                                                <button
+                                                    onClick={() => setIsAuthModalOpen(true)}
+                                                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200"
+                                                >
+                                                    Inicia Sesión para Comprar
+                                                </button>
+                                            </div>
+                                        ) : preferenceId ? (
+                                            <Wallet initialization={{ preferenceId: preferenceId }} />
                                         ) : (
-                                            <>
-                                                <CreditCard className="w-6 h-6" />
-                                                Ir a Pagar
-                                            </>
+                                            <div className="flex flex-col gap-3">
+                                                <span className="text-red-500 font-medium text-center">No se pudo cargar Mercado Pago.</span>
+                                                <button
+                                                    onClick={handlePurchase}
+                                                    className="w-full bg-gray-200 text-gray-800 py-3 rounded-2xl font-bold hover:bg-gray-300 transition-all"
+                                                >
+                                                    Reintentar
+                                                </button>
+                                            </div>
                                         )}
-                                    </button>
+                                    </div>
 
-                                    <p className="text-center text-xs text-gray-400">
+                                    <p className="text-center text-xs text-gray-400 mt-6">
                                         Al confirmar, aceptás nuestras políticas de reembolso y términos de servicio.
                                     </p>
                                 </div>
