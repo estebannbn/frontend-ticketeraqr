@@ -111,7 +111,7 @@ export default function OrganizationRegisterPage() {
                                         maxLength={11}
                                         className={`block w-full px-4 py-3 rounded-xl border transition-all focus:ring-2 focus:ring-purple-200 outline-none ${errors.cuit ? "border-red-500" : "border-gray-200 focus:border-purple-500"
                                             }`}
-                                        placeholder="30123456789"
+                                        placeholder="30123456781"
                                     />
                                     {errors.cuit && <p className="text-red-500 text-xs mt-1">{errors.cuit.message}</p>}
                                 </div>
