@@ -56,7 +56,7 @@ export async function getTicketsByCliente(id: number): Promise<Ticket[]> {
 // ✅ Consumir ticket por QR token
 export async function consumirTicket(tokenQr: string) {
   const res = await fetch(`${API_URL}/api/tickets/consumir/${tokenQr}`, {
-    method: "POST",
+    method: "PUT",
   });
 
   if (!res.ok) {

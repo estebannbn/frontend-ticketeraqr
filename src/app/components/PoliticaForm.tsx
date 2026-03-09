@@ -23,6 +23,12 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
     onSubmit,
     loading,
 }) => {
+    // Obtener fecha y hora actual en Argentina (UTC-3) para el atributo min
+    const now = new Date();
+    const offset = -3 * 60; // offset en minutos respecto a UTC
+    const localTime = new Date(now.getTime() + (offset - now.getTimezoneOffset()) * 60 * 1000);
+    const minDateTime = localTime.toISOString().slice(0, 16);
+
     const {
         register,
         handleSubmit,
@@ -123,6 +129,7 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
                     type="datetime-local"
                     id="fechaVigencia"
                     {...register("fechaVigencia")}
+                    min={minDateTime}
                     className={`w-full p-2 border rounded ${errors.fechaVigencia ? "border-red-500" : "border-gray-300"
                         }`}
                 />
