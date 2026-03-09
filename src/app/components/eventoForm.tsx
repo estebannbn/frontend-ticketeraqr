@@ -44,6 +44,12 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
+  // Obtener fecha y hora actual en Argentina (UTC-3) para el atributo min
+  const now = new Date();
+  const offset = -3 * 60; // offset en minutos respecto a UTC
+  const localTime = new Date(now.getTime() + (offset - now.getTimezoneOffset()) * 60 * 1000);
+  const minDateTime = localTime.toISOString().slice(0, 16);
+
   const {
     register,
     handleSubmit,
@@ -213,6 +219,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
           <input
             type="datetime-local"
             {...register("fechaHoraEvento")}
+            min={minDateTime}
             className={`w-full p-2 border rounded ${errors.fechaHoraEvento ? 'border-red-500' : 'border-gray-300'}`}
           />
           {errors.fechaHoraEvento && <p className="text-red-500 text-xs mt-1">{errors.fechaHoraEvento.message}</p>}
