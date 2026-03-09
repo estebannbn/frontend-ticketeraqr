@@ -92,7 +92,7 @@ export const EventGrid: React.FC<EventGridProps> = ({ eventos, loading }) => {
 
                         <div className="mt-auto">
                             <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                <div>
+                                <div className="flex-1 mr-4">
                                     <p className="text-xs text-gray-500">Desde</p>
                                     <p className="text-lg font-bold text-gray-900">
                                         ${Math.min(...evento.tipoTickets.map(t => t.precio))}
@@ -102,7 +102,7 @@ export const EventGrid: React.FC<EventGridProps> = ({ eventos, loading }) => {
                                     <Link
                                         href={`/clientes/comprar/${evento.idEvento}`}
                                         onClick={handleComprarClick}
-                                        className="flex-1 bg-black text-white text-center py-2 rounded-xl font-bold hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                        className="bg-black text-white px-6 py-2 rounded-xl font-bold hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
                                     >
                                         Comprar
                                         <ArrowRight className="w-4 h-4" />
