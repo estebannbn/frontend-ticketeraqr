@@ -1,5 +1,3 @@
-"use server"
-
 import { Organizacion, OrganizacionFormData } from "@/types/organizacion";
 
 export interface ApiResponse<T> {
