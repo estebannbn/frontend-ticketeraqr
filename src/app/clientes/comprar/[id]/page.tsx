@@ -36,20 +36,18 @@ export default function PurchasePage() {
     }, [id]);
 
     const loadData = async () => {
-        try {
-            setLoading(true);
-            const data = await getEventoById(Number(id));
-            setEvento(data);
-            if (data.tipoTickets.length > 0) {
-                const primerTicketConStock = data.tipoTickets.find(t => (t._count?.tickets || 0) < t.cantMaxPorTipo) || data.tipoTickets[0];
+        setLoading(true);
+        const res = await getEventoById(Number(id));
+        if (res.success) {
+            setEvento(res.data);
+            if (res.data.tipoTickets.length > 0) {
+                const primerTicketConStock = res.data.tipoTickets.find(t => (t._count?.tickets || 0) < t.cantMaxPorTipo) || res.data.tipoTickets[0];
                 setSelectedTipo(primerTicketConStock);
             }
-        } catch (err) {
-            console.error(err);
-            setError("No se pudo cargar la información del evento.");
-        } finally {
-            setLoading(false);
+        } else {
+            setError(res.error || "No se pudo cargar la información del evento.");
         }
+        setLoading(false);
     };
 
     // Removes automatic handlePurchase on selection to prevent overselling

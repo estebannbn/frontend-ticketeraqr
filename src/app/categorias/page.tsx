@@ -40,26 +40,24 @@ function AdminCategoriasView() {
   }, []);
 
   const loadCategorias = async () => {
-    try {
-      const data = await getCategorias();
-      setCategorias(data);
-    } catch (error) {
-      console.error("Error al cargar categorías:", error);
-    } finally {
-      setLoading(false);
+    const res = await getCategorias();
+    if (res.success) {
+      setCategorias(res.data);
+    } else {
+      console.error("Error al cargar categorías:", res.error);
     }
+    setLoading(false);
   };
 
   const handleFormSubmit = async (data: CategoriaFormData) => {
     setLoading(true);
-    try {
-      await createCategoria(data);
+    const res = await createCategoria(data);
+    if (res.success) {
       await loadCategorias();
-    } catch (error: any) {
-      throw error;
-    } finally {
-      setLoading(false);
+    } else {
+      alert(res.error);
     }
+    setLoading(false);
   };
 
   const handleDeleteRequest = (categoria: Categoria) => {
@@ -70,16 +68,15 @@ function AdminCategoriasView() {
   const handleDeleteConfirm = async () => {
     if (!categoriaToDelete) return;
     setLoading(true);
-    try {
-      await deleteCategoria(categoriaToDelete.idCategoria);
+    const res = await deleteCategoria(categoriaToDelete.idCategoria);
+    if (res.success) {
       await loadCategorias();
-    } catch (error) {
-      console.error("Error al eliminar la categoría:", error);
-    } finally {
-      setShowDeleteModal(false);
-      setCategoriaToDelete(null);
-      setLoading(false);
+    } else {
+      alert(res.error);
     }
+    setShowDeleteModal(false);
+    setCategoriaToDelete(null);
+    setLoading(false);
   };
 
 
@@ -124,22 +121,22 @@ function ClienteCategoriasView() {
 
   useEffect(() => {
     const loadData = async () => {
-      try {
-        const [cats, evts] = await Promise.all([getCategorias(), getEventos()]);
-        let filtered = evts;
+      const [catsRes, evtsRes] = await Promise.all([getCategorias(), getEventos()]);
+      
+      let filtered: Evento[] = [];
+      if (evtsRes.success) {
+        filtered = evtsRes.data;
         if (user?.rol === "ORGANIZACION" && user?.idUsuario) {
           const org = await getOrganizacionByUsuarioId(Number(user.idUsuario));
           if (org) {
-            filtered = evts.filter(e => e.idOrganizacion === org.idOrganizacion);
+            filtered = evtsRes.data.filter(e => e.idOrganizacion === org.idOrganizacion);
           }
         }
-        setCategorias(cats);
-        setEventos(filtered);
-      } catch (e) {
-        console.error("Error cargando datos de categorías/eventos:", e);
-      } finally {
-        setLoading(false);
       }
+      
+      if (catsRes.success) setCategorias(catsRes.data);
+      setEventos(filtered);
+      setLoading(false);
     };
     if (user) loadData();
   }, [user]);

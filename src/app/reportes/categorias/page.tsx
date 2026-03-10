@@ -32,16 +32,16 @@ export default function ReporteCategoriasPage() {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            try {
-                const [statsRes, categoriasRes] = await Promise.all([
-                    getEstadisticasEventos(idOrg || undefined),
-                    getCategorias()
-                ]);
+            const [statsRes, categoriasRes] = await Promise.all([
+                getEstadisticasEventos(idOrg || undefined),
+                getCategorias()
+            ]);
 
-                const eventos = (statsRes as any).data?.eventos || statsRes.eventos || [];
+            const eventos = (statsRes as any).data?.eventos || statsRes.eventos || [];
 
+            if (categoriasRes.success) {
                 // Aggregating Data in the Frontend
-                const categoryStats = categoriasRes.map(cat => {
+                const categoryStats = categoriasRes.data.map(cat => {
                     const eventosDeCat = eventos.filter((e: any) => e.idCategoria === cat.idCategoria);
                     const cantidadEventos = eventosDeCat.length;
                     const ticketsVendidos = eventosDeCat.reduce((sum: number, e: any) => sum + e.vendidos, 0);
@@ -57,11 +57,8 @@ export default function ReporteCategoriasPage() {
                 }).filter(cat => cat.cantidadEventos > 0).sort((a, b) => b.ticketsVendidos - a.ticketsVendidos);
 
                 setData(categoryStats);
-            } catch (error) {
-                console.error("Error fetching category report:", error);
-            } finally {
-                setLoading(false);
             }
+            setLoading(false);
         };
         if (user && (user.rol === 'ADMIN' || (user.rol === 'ORGANIZACION' && idOrg))) {
             fetchData();

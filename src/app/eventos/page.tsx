@@ -27,6 +27,7 @@ export default function EventosPage() {
   const [successEvent, setSuccessEvent] = useState<Evento | null>(null);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [organizacionId, setOrganizacionId] = useState<number | null>(null);
+  const [eventFormError, setEventFormError] = useState<string | null>(null);
 
   const { user } = useAuth(); // Assume we need to import useAuth and destructure user
 
@@ -36,43 +37,38 @@ export default function EventosPage() {
   }, [user]);
 
   const loadCategorias = async () => {
-    try {
-      const data = await getCategorias();
-      setCategorias(data);
-    } catch (error) {
-      console.error("Error cargando categorías:", error);
+    const res = await getCategorias();
+    if (res.success) {
+      setCategorias(res.data);
+    } else {
+      console.error("Error cargando categorías:", res.error);
     }
   };
 
   const loadEventos = async () => {
-    try {
-      if (user?.rol === "ADMIN") {
-        const data = await getEventos();
-        setEventos(data);
-      } else if (user?.rol === "ORGANIZACION" && user?.idUsuario) {
-        const orgData = await getOrganizacionByUsuarioId(Number(user.idUsuario));
-        setOrganizacionId(orgData.idOrganizacion);
-        const data = await getEventos(orgData.idOrganizacion);
-        setEventos(data);
-      } else {
-        setEventos([]);
-      }
-    } catch (error) {
-      console.error("Error cargando eventos:", error);
-    } finally {
-      setLoading(false);
+    if (user?.rol === "ADMIN") {
+      const res = await getEventos();
+      if (res.success) setEventos(res.data);
+    } else if (user?.rol === "ORGANIZACION" && user?.idUsuario) {
+      const orgData = await getOrganizacionByUsuarioId(Number(user.idUsuario));
+      setOrganizacionId(orgData.idOrganizacion);
+      const res = await getEventos(orgData.idOrganizacion);
+      if (res.success) setEventos(res.data);
+    } else {
+      setEventos([]);
     }
+    setLoading(false);
   };
 
 
   const handleFormSubmit = async (data: EventoFormData) => {
-    setLoading(true);
+    setEventFormError(null);
     try {
       const parsedCapacidadMax = typeof data.capacidadMax === 'number' ? data.capacidadMax : parseInt(String(data.capacidadMax), 10) || 0;
       const totalTicketsCapacity = tipoTickets.reduce((acc, t) => acc + t.cantMaxPorTipo, 0);
 
       if (totalTicketsCapacity > parsedCapacidadMax) {
-        alert("La suma de la capacidad de los tipos de tickets no puede exceder la capacidad máxima del evento.");
+        setEventFormError("La suma de la capacidad de los tipos de tickets no puede exceder la capacidad máxima del evento.");
         setLoading(false);
         return;
       }
@@ -87,21 +83,19 @@ export default function EventosPage() {
         tipoTickets: tipoTickets
       };
 
-      const nuevo = await createEvento(eventoData);
-      // Explicitly update state with new event
-      setEventos((prev) => [...prev, nuevo]);
-      setSuccessEvent(nuevo);
-      // Desaparecer mensaje de éxito después de 10 segundos
-      setTimeout(() => setSuccessEvent(null), 10000);
-
-      // Reset form state
-      setTipoTickets([]);
-
-      // Reload events list to ensure consistency
-      await loadEventos();
+      const res = await createEvento(eventoData);
+      if (res.success) {
+        setEventos((prev) => [...prev, res.data]);
+        setSuccessEvent(res.data);
+        setTimeout(() => setSuccessEvent(null), 10000);
+        setTipoTickets([]);
+        await loadEventos();
+      } else {
+        setEventFormError(res.error);
+      }
     } catch (error) {
       console.error("Error en el formulario de evento:", error);
-      alert((error as Error).message);
+      setEventFormError((error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -133,11 +127,14 @@ export default function EventosPage() {
   const handleCambiarFecha = async (id: number, nuevaFecha: string) => {
     setLoading(true);
     try {
-      await cambiarFechaEvento(id, nuevaFecha);
-      await loadEventos();
+      const res = await cambiarFechaEvento(id, nuevaFecha);
+      if (res.success) {
+        await loadEventos();
+      } else {
+        alert(res.error);
+      }
     } catch (error) {
       console.error("Error cambiando fecha:", error);
-      throw error;
     } finally {
       setLoading(false);
     }
@@ -146,15 +143,13 @@ export default function EventosPage() {
   const handleDelete = async (id: number) => {
     if (!confirm("¿Estás seguro de eliminar este evento?")) return;
     setLoading(true);
-    try {
-      await deleteEvento(id);
+    const res = await deleteEvento(id);
+    if (res.success) {
       setEventos((prev) => prev.filter((ev) => ev.idEvento !== id));
-    } catch (error) {
-      console.error("Error eliminando evento:", error);
-      alert((error as Error).message);
-    } finally {
-      setLoading(false);
+    } else {
+      alert(res.error);
     }
+    setLoading(false);
   };
 
 
@@ -162,15 +157,13 @@ export default function EventosPage() {
   const handleCancelEvento = async (id: number) => {
     if (!confirm("¿Estás seguro de cancelar este evento? Esto reembolsará todos los tickets pagados y el evento no será visible como activo.")) return;
     setLoading(true);
-    try {
-      await cancelarEvento(id);
-      await loadEventos(); // Recargar todos para asegurar que el estado se actualiza en la tabla
-    } catch (error) {
-      console.error("Error cancelando evento:", error);
-      alert((error as Error).message);
-    } finally {
-      setLoading(false);
+    const res = await cancelarEvento(id);
+    if (res.success) {
+      await loadEventos();
+    } else {
+      alert(res.error);
     }
+    setLoading(false);
   };
 
   return (
@@ -215,6 +208,7 @@ export default function EventosPage() {
               loading={loading}
               tipoTickets={tipoTickets}
               onRemoveTicket={handleRemoveTicket}
+              serverError={eventFormError}
             />
 
             <button
