@@ -8,7 +8,7 @@ import { User, Menu, X } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { getClienteByUsuarioId } from "@/app/services/clientService";
 
-const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/['"]/g, "");
+const baseUrl = "";
 
 export default function Navbar() {
 

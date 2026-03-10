@@ -10,8 +10,6 @@ import {
     getPoliticaActual,
     getPoliticas,
     createPolitica,
-    updatePolitica,
-    deletePolitica,
 } from "@/app/services/politicaService";
 import { Politica, PoliticaFormData } from "@/types/politica";
 
@@ -79,12 +77,6 @@ export default function PoliticasPage() {
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <FileText className="h-6 w-6 text-blue-600" /> Establecer Políticas
                     </h1>
-                    <button
-                        onClick={() => router.push("/")}
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-                    >
-                        <ArrowLeft className="h-4 w-4" /> Aceptar
-                    </button>
                 </div>
 
                 {mensaje && (

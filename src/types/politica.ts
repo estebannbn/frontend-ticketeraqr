@@ -7,5 +7,4 @@ export interface Politica {
 
 export interface PoliticaFormData {
     diasReembolso: number;
-    fechaVigencia: string;
 }

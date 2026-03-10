@@ -8,7 +8,7 @@ export interface ApiResponse<T> {
     message: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const baseUrl = "";
 
 export async function getPoliticaActual(): Promise<Politica | null> {
     const res = await fetch(`${baseUrl}/api/politicas/actual`, {
@@ -44,29 +44,3 @@ export async function createPolitica(
     return json.data;
 }
 
-export async function updatePolitica(
-    id: string,
-    data: PoliticaFormData
-): Promise<Politica> {
-    const res = await fetch(`${baseUrl}/api/politicas/${encodeURIComponent(id)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || "Error al actualizar política");
-    }
-    const json = (await res.json()) as ApiResponse<Politica>;
-    return json.data;
-}
-
-export async function deletePolitica(id: string): Promise<void> {
-    const res = await fetch(`${baseUrl}/api/politicas/${encodeURIComponent(id)}`, {
-        method: "DELETE",
-    });
-    if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || "Error al eliminar política");
-    }
-}
