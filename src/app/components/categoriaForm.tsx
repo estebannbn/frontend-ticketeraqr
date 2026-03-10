@@ -18,18 +18,12 @@ const categoriaSchema = z.object({
 });
 
 interface CategoriaFormProps {
-  initialData?: Categoria;
-  isEditing: boolean;
   onSubmit: (data: Categoria) => Promise<void> | void;
-  onCancel?: () => void;
   loading: boolean;
 }
 
 export const CategoriaForm: React.FC<CategoriaFormProps> = ({
-  initialData,
-  isEditing,
   onSubmit,
-  onCancel,
   loading,
 }) => {
   const [generalError, setGeneralError] = useState("");
@@ -43,37 +37,45 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     formState: { errors },
   } = useForm<Categoria>({
     resolver: zodResolver(categoriaSchema),
-    defaultValues: initialData || {
+    defaultValues: {
       idCategoria: 0,
       nombreCategoria: "",
     },
   });
 
-  useEffect(() => {
-    if (initialData) {
-      setValue("idCategoria", initialData.idCategoria);
-      setValue("nombreCategoria", initialData.nombreCategoria);
-    }
-  }, [initialData, setValue]);
-
   const onFormSubmit = async (data: Categoria) => {
     try {
       setGeneralError("");
       await onSubmit(data);
-      if (!isEditing) reset({ nombreCategoria: "" });
+      reset({ nombreCategoria: "" });
     } catch (err: any) {
+      let parsedError: any = null;
+      try {
+        parsedError = JSON.parse(err.message);
+      } catch (e) {
+        // Not a JSON error string
+      }
 
-      if (err.isValidationError && err.details) {
-        err.details.forEach((issue: { path: string; message: string }) => {
-          if (issue.path === "nombreCategoria") {
+      const isValidation = parsedError?.isValidationError || err.isValidationError;
+      const details = parsedError?.details || err.details;
+
+      if (isValidation && details) {
+        let isHandled = false;
+        details.forEach((issue: { path: string; message: string }) => {
+          if (issue.path === "body.nombreCategoria" || issue.path === "nombreCategoria") {
             setError("nombreCategoria", {
               type: "backend",
-              message: "Ya existe una categoría con ese nombre.",
+              message: issue.message || "Ya existe una categoría con ese nombre.",
             });
+            isHandled = true;
           }
         });
+        if (!isHandled) {
+          setGeneralError("Revise los datos ingresados e intente nuevamente.");
+        }
       } else {
-        setGeneralError("Ocurrió un error inesperado. Intente nuevamente.");
+        const errorMsg = err?.message || (err?.isValidationError ? "Por favor, revise los errores indicados." : "Ocurrió un error inesperado. Intente nuevamente.");
+        setGeneralError(typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg));
       }
     }
   };
@@ -98,7 +100,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
         <input
           type="text"
           id="nombreCategoria"
-          placeholder="Ej: Vacunas, Alimentos, Accesorios..."
+          placeholder="Ej: Recitales, Deportes, Conferencias..."
           {...register("nombreCategoria")}
           onInput={(e) => {
             const target = e.target as HTMLInputElement;
@@ -126,18 +128,8 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
           disabled={loading}
           className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 disabled:bg-gray-400 transition"
         >
-          {loading ? "Guardando..." : isEditing ? "Actualizar Categoría" : "Crear Categoría"}
+          {loading ? "Guardando..." : "Crear Categoría"}
         </button>
-
-        {isEditing && onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition"
-          >
-            Cancelar
-          </button>
-        )}
       </div>
     </form>
   );

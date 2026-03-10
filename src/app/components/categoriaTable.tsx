@@ -3,14 +3,12 @@ import { Categoria } from "@/types/categoria";
 interface CategoriaTableProps {
   categorias: Categoria[];
   loading: boolean;
-  onEdit: (categoria: Categoria) => void;
   onDelete: (categoria: Categoria) => void;
 }
 
 export const CategoriaTable: React.FC<CategoriaTableProps> = ({
   categorias,
   loading,
-  onEdit,
   onDelete,
 }) => {
   return (

@@ -106,11 +106,11 @@ export default function VentasReportePage() {
                 <form onSubmit={handleApplyFilters} className="bg-white p-6 rounded-xl shadow-sm mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
-                        <input type="date" name="fechaInicio" onChange={handleFilterChange} className="w-full border rounded-lg p-2 text-sm" />
+                        <input type="date" name="fechaInicio" value={filters.fechaInicio} max={filters.fechaFin} onChange={handleFilterChange} className="w-full border rounded-lg p-2 text-sm" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
-                        <input type="date" name="fechaFin" onChange={handleFilterChange} className="w-full border rounded-lg p-2 text-sm" />
+                        <input type="date" name="fechaFin" value={filters.fechaFin} min={filters.fechaInicio} onChange={handleFilterChange} className="w-full border rounded-lg p-2 text-sm" />
                     </div>
 
                     {/* Filtro Categoría */}

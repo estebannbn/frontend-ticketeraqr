@@ -40,10 +40,9 @@ export const EventoTable: React.FC<EventoTableProps> = ({
     if (selectedEvento && nuevaFecha) {
       const selectedDate = new Date(nuevaFecha);
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
 
       if (selectedDate < today) {
-        setErrorFecha("La fecha del evento no puede ser previa al día de hoy");
+        setErrorFecha("La fecha del evento no puede ser previa a la fecha y hora actual");
         return;
       }
 
@@ -62,7 +61,9 @@ export const EventoTable: React.FC<EventoTableProps> = ({
     }
   };
 
-  const todayIsoString = new Date().toISOString().slice(0, 16);
+  const now = new Date();
+  const argentinaTime = new Date(now.getTime() - 3 * 3600000);
+  const minDateTime = argentinaTime.toISOString().slice(0, 16);
 
   // filtro eventos
   const eventosFiltrados = eventos.filter((evento) => {
@@ -257,7 +258,7 @@ export const EventoTable: React.FC<EventoTableProps> = ({
 
               <input
                 type="datetime-local"
-                min={todayIsoString}
+                min={minDateTime}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errorFecha ? "border-red-500" : ""
                   }`}
                 value={nuevaFecha}

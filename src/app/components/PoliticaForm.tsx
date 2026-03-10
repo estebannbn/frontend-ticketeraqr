@@ -23,11 +23,10 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
     onSubmit,
     loading,
 }) => {
-    // Obtener fecha y hora actual en Argentina (UTC-3) para el atributo min
+    // Obtener fecha y hora actual en Argentina (UTC-3)
     const now = new Date();
-    const offset = -3 * 60; // offset en minutos respecto a UTC
-    const localTime = new Date(now.getTime() + (offset - now.getTimezoneOffset()) * 60 * 1000);
-    const minDateTime = localTime.toISOString().slice(0, 16);
+    const argentinaTime = new Date(now.getTime() - 3 * 3600000);
+    const minDateTime = argentinaTime.toISOString().slice(0, 16);
 
     const {
         register,
@@ -38,7 +37,7 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
     } = useForm<PoliticaFormData>({
         resolver: zodResolver(politicaSchema) as unknown as Resolver<PoliticaFormData>,
         defaultValues: {
-            fechaVigencia: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
+            fechaVigencia: new Date(new Date().getTime() - 3 * 3600000)
                 .toISOString()
                 .slice(0, 16),
         },
@@ -49,7 +48,7 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
             if (!dirtyFields.fechaVigencia) {
                 setValue(
                     "fechaVigencia",
-                    new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000)
+                    new Date(new Date().getTime() - 3 * 3600000)
                         .toISOString()
                         .slice(0, 16)
                 );
@@ -107,6 +106,12 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
                     type="number"
                     id="diasReembolso"
                     {...register("diasReembolso")}
+                    onInput={(e) => {
+                        const target = e.target as HTMLInputElement;
+                        if (target.value.length > 2) {
+                            target.value = target.value.slice(0, 2);
+                        }
+                    }}
                     className={`w-full p-2 border rounded ${errors.diasReembolso ? "border-red-500" : "border-gray-300"
                         }`}
                     placeholder="Ingrese número de días"

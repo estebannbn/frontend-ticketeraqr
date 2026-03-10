@@ -112,17 +112,6 @@ export default function Home() {
               </div>
             )}
 
-            {rol === "ADMIN" && (
-              <div className="flex justify-center gap-4">
-                <Link
-                  href="/admin/politicas"
-                  className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg"
-                >
-                  <Settings className="w-5 h-5" />
-                  Panel de Administración
-                </Link>
-              </div>
-            )}
 
             {!rol && (
               <div className="flex justify-center gap-4">
