@@ -6,7 +6,7 @@ export interface ApiResponse<T> {
     error: string
 }
 
-const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/['"]/g, "");
+const baseUrl = "";
 
 export async function getOrganizaciones(): Promise<Organizacion[]> {
     const res = await fetch(`${baseUrl}/api/organizaciones`);

@@ -9,7 +9,6 @@ const politicaSchema = z.object({
         .number()
         .int("Debe ser un número entero")
         .min(1, "Debe ingresar al menos 1 día"),
-    fechaVigencia: z.string().min(1, "Debe ingresar una fecha de vigencia"),
 });
 
 interface PoliticaFormProps {
@@ -23,40 +22,14 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
     onSubmit,
     loading,
 }) => {
-    // Obtener fecha y hora actual en Argentina (UTC-3)
-    const now = new Date();
-    const argentinaTime = new Date(now.getTime() - 3 * 3600000);
-    const minDateTime = argentinaTime.toISOString().slice(0, 16);
-
     const {
         register,
         handleSubmit,
         reset,
-        setValue,
-        formState: { errors, dirtyFields },
+        formState: { errors },
     } = useForm<PoliticaFormData>({
         resolver: zodResolver(politicaSchema) as unknown as Resolver<PoliticaFormData>,
-        defaultValues: {
-            fechaVigencia: new Date(new Date().getTime() - 3 * 3600000)
-                .toISOString()
-                .slice(0, 16),
-        },
     });
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (!dirtyFields.fechaVigencia) {
-                setValue(
-                    "fechaVigencia",
-                    new Date(new Date().getTime() - 3 * 3600000)
-                        .toISOString()
-                        .slice(0, 16)
-                );
-            }
-        }, 10000); // Actualiza la hora cada 10 segundos mientras no se edite el campo manualmente
-
-        return () => clearInterval(interval);
-    }, [dirtyFields.fechaVigencia, setValue]);
 
     const onFormSubmit = (data: PoliticaFormData) => {
         onSubmit(data);
@@ -123,27 +96,7 @@ export const PoliticaForm: React.FC<PoliticaFormProps> = ({
                 )}
             </div>
 
-            <div>
-                <label
-                    htmlFor="fechaVigencia"
-                    className="block mb-2 text-sm font-medium"
-                >
-                    Fecha de Entrada en Vigencia
-                </label>
-                <input
-                    type="datetime-local"
-                    id="fechaVigencia"
-                    {...register("fechaVigencia")}
-                    min={minDateTime}
-                    className={`w-full p-2 border rounded ${errors.fechaVigencia ? "border-red-500" : "border-gray-300"
-                        }`}
-                />
-                {errors.fechaVigencia && (
-                    <p className="text-red-500 text-sm mt-1">
-                        {errors.fechaVigencia.message}
-                    </p>
-                )}
-            </div>
+
 
             <div className="flex gap-2 pt-2">
                 <button

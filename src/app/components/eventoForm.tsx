@@ -102,9 +102,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
     formData.append("file", file);
 
     try {
-      const uploadUrl = process.env.NEXT_PUBLIC_API_URL
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/upload`
-        : "http://localhost:3333/api/upload";
+      const uploadUrl = "/api/upload";
 
       const res = await fetch(uploadUrl, {
         method: "POST",

@@ -3,7 +3,7 @@
 import { ApiResponse } from "./clientService";
 import { Usuario } from "@/types/usuario";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const baseUrl = "";
 
 export async function getMe(token: string): Promise<Usuario> {
     const res = await fetch(`${baseUrl}/api/usuarios/me`, {

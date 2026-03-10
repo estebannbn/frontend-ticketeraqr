@@ -13,7 +13,7 @@ function PagoExitosoContent() {
     useEffect(() => {
         if (payment_id) {
             // Check MP payment and force ticket update locally
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/tickets/sincronizar`, {
+            fetch(`/api/tickets/sincronizar`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ payment_id })
