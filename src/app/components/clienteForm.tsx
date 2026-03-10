@@ -187,6 +187,7 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
         <input
           type="date"
           {...register("fechaNacimiento")}
+          onKeyDown={(e) => e.preventDefault()}
           className={`w-full p-2 border rounded ${errors.fechaNacimiento ? 'border-red-500' : ''}`}
         />
         {errors.fechaNacimiento && <p className="text-red-500 text-xs mt-1">{errors.fechaNacimiento.message}</p>}

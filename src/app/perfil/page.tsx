@@ -210,6 +210,7 @@ export default function PerfilPage() {
                                         <input
                                             type="date"
                                             value={profile.fechaNacimiento}
+                                            onKeyDown={(e) => e.preventDefault()}
                                             onChange={e => setProfile(prev => ({ ...prev!, fechaNacimiento: e.target.value } as ProfileData))}
                                             className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
                                             required

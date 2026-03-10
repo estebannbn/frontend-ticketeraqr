@@ -48,7 +48,8 @@ export default function PurchasePage() {
             const data = await getEventoById(Number(id));
             setEvento(data);
             if (data.tipoTickets.length > 0) {
-                setSelectedTipo(data.tipoTickets[0]);
+                const primerTicketConStock = data.tipoTickets.find(t => (t._count?.tickets || 0) < t.cantMaxPorTipo) || data.tipoTickets[0];
+                setSelectedTipo(primerTicketConStock);
             }
         } catch (err) {
             console.error(err);
@@ -246,38 +247,71 @@ export default function PurchasePage() {
 
                     {/* Purchase Sidebar */}
                     <div className="lg:col-span-1">
-                        {evento.estado === 'CANCELADO' ? (
-                            <div className="bg-red-50 rounded-3xl shadow-xl border border-red-100 p-8 sticky top-8 text-center">
-                                <h3 className="text-2xl font-bold text-red-700 mb-4">Evento Cancelado</h3>
-                                <p className="text-red-600 font-medium">Este evento ha sido cancelado por la organización y la venta de entradas de este evento se ha cerrado. Se realizarán reembolsos automáticos.</p>
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
+                        {(() => {
+                            const totalVendidos = evento.tipoTickets.reduce((acc, t) => acc + (t._count?.tickets || 0), 0);
+                            const eventoAgotado = totalVendidos >= evento.capacidadMax;
+
+                            if (evento.estado === 'CANCELADO') {
+                                return (
+                                    <div className="bg-red-50 rounded-3xl shadow-xl border border-red-100 p-8 sticky top-8 text-center">
+                                        <h3 className="text-2xl font-bold text-red-700 mb-4">Evento Cancelado</h3>
+                                        <p className="text-red-600 font-medium">Este evento ha sido cancelado por la organización y la venta de entradas de este evento se ha cerrado. Se realizarán reembolsos automáticos.</p>
+                                    </div>
+                                );
+                            }
+
+                            if (eventoAgotado) {
+                                return (
+                                    <div className="bg-gray-50 rounded-3xl shadow-xl border border-gray-200 p-8 sticky top-8 text-center">
+                                        <h3 className="text-2xl font-bold text-gray-900 mb-4">Evento Agotado</h3>
+                                        <p className="text-gray-600 font-medium">Se han vendido todas las entradas disponibles para este evento. ¡Gracias por el interés!</p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
                                 <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                                     <TicketIcon className="w-6 h-6 text-blue-600" />
                                     Seleccionar Entradas
                                 </h3>
 
                                 <div className="space-y-4 mb-8">
-                                    {evento.tipoTickets.map((tipo) => (
-                                        <button
-                                            key={tipo.idTipoTicket}
-                                            onClick={() => setSelectedTipo(tipo)}
-                                            className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 ${selectedTipo?.idTipoTicket === tipo.idTipoTicket
-                                                ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
-                                                : "border-gray-100 hover:border-blue-200"
+                                    {evento.tipoTickets.map((tipo) => {
+                                        const tipoAgotado = (tipo._count?.tickets || 0) >= tipo.cantMaxPorTipo;
+                                        const isSelected = selectedTipo?.idTipoTicket === tipo.idTipoTicket;
+                                        
+                                        return (
+                                            <button
+                                                key={tipo.idTipoTicket}
+                                                onClick={() => !tipoAgotado && setSelectedTipo(tipo)}
+                                                disabled={tipoAgotado}
+                                                className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 ${
+                                                    tipoAgotado 
+                                                        ? "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed" 
+                                                        : isSelected
+                                                            ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
+                                                            : "border-gray-100 hover:border-blue-200"
                                                 }`}
-                                        >
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span className="font-bold text-gray-900">{tipo.tipo}</span>
-                                                <span className="text-xl font-extrabold text-blue-600">${tipo.precio}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-sm text-gray-500">
-                                                <span>{tipo.acceso}</span>
-                                                {tipo.sector && <span className="italic">Sector: {tipo.sector}</span>}
-                                            </div>
-                                        </button>
-                                    ))}
+                                            >
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="font-bold text-gray-900">{tipo.tipo}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        {tipoAgotado && (
+                                                            <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-lg uppercase tracking-wide">
+                                                                Sin stock
+                                                            </span>
+                                                        )}
+                                                        <span className="text-xl font-extrabold text-blue-600">${tipo.precio}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm text-gray-500">
+                                                    <span>{tipo.acceso}</span>
+                                                    {tipo.sector && <span className="italic">Sector: {tipo.sector}</span>}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
 
                                 {error && (
@@ -314,7 +348,8 @@ export default function PurchasePage() {
                                                 <span className="text-red-500 font-medium text-center">No se pudo cargar Mercado Pago.</span>
                                                 <button
                                                     onClick={handlePurchase}
-                                                    className="w-full bg-gray-200 text-gray-800 py-3 rounded-2xl font-bold hover:bg-gray-300 transition-all"
+                                                    disabled={!selectedTipo}
+                                                    className="w-full bg-gray-200 text-gray-800 py-3 rounded-2xl font-bold hover:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Reintentar
                                                 </button>
@@ -327,7 +362,8 @@ export default function PurchasePage() {
                                     </p>
                                 </div>
                             </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </div>
             </main>

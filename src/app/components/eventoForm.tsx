@@ -217,6 +217,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
             type="datetime-local"
             {...register("fechaHoraEvento")}
             min={minDateTime}
+            onKeyDown={(e) => e.preventDefault()}
             className={`w-full p-2 border rounded ${errors.fechaHoraEvento ? 'border-red-500' : 'border-gray-300'}`}
           />
           {errors.fechaHoraEvento && <p className="text-red-500 text-xs mt-1">{errors.fechaHoraEvento.message}</p>}
