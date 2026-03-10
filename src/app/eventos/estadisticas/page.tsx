@@ -147,12 +147,14 @@ export default function EstadisticasPage() {
             type="date"
             className="border border-blue-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
             value={fechaInicio}
+            max={fechaFin}
             onChange={(e) => setFechaInicio(e.target.value)}
           />
           <input
             type="date"
             className="border border-blue-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
             value={fechaFin}
+            min={fechaInicio}
             onChange={(e) => setFechaFin(e.target.value)}
           />
           <select

@@ -8,7 +8,6 @@ import ConfirmDeleteModal from "@/app/components/ui/confirmDeleteModal";
 import {
   getCategorias,
   createCategoria,
-  updateCategoria,
   deleteCategoria,
 } from "@/app/services/categoriaService";
 import { Categoria, CategoriaFormData } from "@/types/categoria";
@@ -33,7 +32,6 @@ export default function CategoriasPage() {
 function AdminCategoriasView() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null);
 
@@ -55,26 +53,13 @@ function AdminCategoriasView() {
   const handleFormSubmit = async (data: CategoriaFormData) => {
     setLoading(true);
     try {
-      if (editingCategoria) {
-        await updateCategoria(editingCategoria.idCategoria, data);
-      } else {
-        await createCategoria(data);
-      }
+      await createCategoria(data);
       await loadCategorias();
-      setEditingCategoria(null);
     } catch (error: any) {
-      if (error.isValidationError) {
-        throw error;
-      }
-      console.error("Error al guardar la categoría:", error);
-      alert((error as Error).message || "Ocurrió un error");
+      throw error;
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEdit = (categoria: Categoria) => {
-    setEditingCategoria(categoria);
   };
 
   const handleDeleteRequest = (categoria: Categoria) => {
@@ -97,9 +82,7 @@ function AdminCategoriasView() {
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditingCategoria(null);
-  };
+
 
   return (
     <RoleGuard allowedRoles={["ADMIN"]}>
@@ -108,10 +91,7 @@ function AdminCategoriasView() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           <div className="col-span-12 md:col-span-4">
             <CategoriaForm
-              initialData={editingCategoria || undefined}
-              isEditing={!!editingCategoria}
               onSubmit={handleFormSubmit}
-              onCancel={handleCancelEdit}
               loading={loading}
             />
           </div>
@@ -119,7 +99,6 @@ function AdminCategoriasView() {
             <CategoriaTable
               categorias={categorias}
               loading={loading}
-              onEdit={handleEdit}
               onDelete={handleDeleteRequest}
             />
           </div>

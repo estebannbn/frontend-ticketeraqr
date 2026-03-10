@@ -44,11 +44,10 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
-  // Obtener fecha y hora actual en Argentina (UTC-3) para el atributo min
+  // Obtener fecha y hora actual en Argentina (UTC-3)
   const now = new Date();
-  const offset = -3 * 60; // offset en minutos respecto a UTC
-  const localTime = new Date(now.getTime() + (offset - now.getTimezoneOffset()) * 60 * 1000);
-  const minDateTime = localTime.toISOString().slice(0, 16);
+  const argentinaTime = new Date(now.getTime() - 3 * 3600000);
+  const minDateTime = argentinaTime.toISOString().slice(0, 16);
 
   const {
     register,
