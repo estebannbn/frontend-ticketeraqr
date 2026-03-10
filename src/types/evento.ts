@@ -70,4 +70,7 @@ export interface TipoTicket {
   acceso: string;
   sector?: string;
   cantMaxPorTipo: number;
+  _count?: {
+      tickets: number;
+  };
 }

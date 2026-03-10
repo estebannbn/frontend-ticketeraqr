@@ -8,7 +8,7 @@ import { User, Menu, X } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { getClienteByUsuarioId } from "@/app/services/clientService";
 
-const baseUrl = "";
+const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 
 export default function Navbar() {
 
@@ -86,8 +86,14 @@ export default function Navbar() {
   }, [userId, rol, userName]);
 
   if (pathname === "/login") return null;
+  if (!user) return null;
 
-  const isActive = (href: string) => pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === '/eventos' && pathname.startsWith('/eventos/estadisticas')) {
+      return false;
+    }
+    return pathname.startsWith(href) && href !== '/';
+  };
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 

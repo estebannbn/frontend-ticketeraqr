@@ -3,7 +3,6 @@ import { Calendar, MapPin, Tag, ArrowRight } from "lucide-react";
 import { Evento } from "@/types/evento";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import AuthModal from "./ui/AuthModal";
 
 interface EventGridProps {
     eventos: Evento[];
@@ -12,7 +11,6 @@ interface EventGridProps {
 
 export const EventGrid: React.FC<EventGridProps> = ({ eventos, loading }) => {
     const { isAuthenticated, user } = useAuth();
-    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     if (loading) {
         return (
@@ -32,19 +30,10 @@ export const EventGrid: React.FC<EventGridProps> = ({ eventos, loading }) => {
         );
     }
 
-    const handleComprarClick = (e: React.MouseEvent) => {
-        if (!isAuthenticated) {
-            e.preventDefault();
-            setIsAuthModalOpen(true);
-        }
-    };
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AuthModal
-                isOpen={isAuthModalOpen}
-                onClose={() => setIsAuthModalOpen(false)}
-            />
             {eventos.filter(e => e.estado !== 'CANCELADO').map((evento) => (
                 <div
                     key={evento.idEvento}
@@ -98,16 +87,32 @@ export const EventGrid: React.FC<EventGridProps> = ({ eventos, loading }) => {
                                         ${Math.min(...evento.tipoTickets.map(t => t.precio))}
                                     </p>
                                 </div>
-                                {(!isAuthenticated || user?.rol === 'CLIENTE') && (
-                                    <Link
-                                        href={`/clientes/comprar/${evento.idEvento}`}
-                                        onClick={handleComprarClick}
-                                        className="bg-black text-white px-6 py-2 rounded-xl font-bold hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
-                                    >
-                                        Comprar
-                                        <ArrowRight className="w-4 h-4" />
-                                    </Link>
-                                )}
+                                {(() => {
+                                    const totalVendidos = evento.tipoTickets.reduce((acc, t) => acc + (t._count?.tickets || 0), 0);
+                                    const sinStock = totalVendidos >= evento.capacidadMax;
+
+                                    if (sinStock) {
+                                        return (
+                                            <div className="bg-red-50 text-red-600 px-6 py-2 rounded-xl font-bold flex items-center justify-center gap-2 flex-shrink-0 border border-red-200">
+                                                Sin stock
+                                            </div>
+                                        );
+                                    }
+
+                                    if (isAuthenticated && user?.rol === 'CLIENTE') {
+                                        return (
+                                            <Link
+                                                href={`/clientes/comprar/${evento.idEvento}`}
+                                                className="bg-black text-white px-6 py-2 rounded-xl font-bold hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
+                                            >
+                                                Comprar
+                                                <ArrowRight className="w-4 h-4" />
+                                            </Link>
+                                        );
+                                    }
+
+                                    return null;
+                                })()}
                             </div>
                         </div>
                     </div>

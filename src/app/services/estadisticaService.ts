@@ -1,5 +1,5 @@
 // src/services/eventoService.ts
-const baseUrl = "";
+const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 export async function getEstadisticasEventos(idOrganizacion?: number) {
   const url = idOrganizacion
     ? `${baseUrl}/api/eventos/estadisticas?idOrganizacion=${idOrganizacion}`

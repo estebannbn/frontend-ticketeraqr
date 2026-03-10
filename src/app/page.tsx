@@ -122,6 +122,12 @@ export default function Home() {
                   <User className="w-5 h-5" />
                   Iniciar Sesión
                 </Link>
+                <Link
+                  href="/register"
+                  className="flex items-center gap-2 bg-white text-blue-600 border-2 border-blue-600 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg"
+                >
+                  Registrarse
+                </Link>
               </div>
             )}
           </div>
@@ -160,6 +166,7 @@ export default function Home() {
                 className="bg-transparent border-none text-sm font-medium text-gray-600 outline-none cursor-pointer"
                 value={startDate}
                 min={hoyStr}
+                onKeyDown={(e) => e.preventDefault()}
                 onChange={(e) => setStartDate(e.target.value)}
                 title="Fecha desde"
               />
@@ -169,6 +176,7 @@ export default function Home() {
                 className="bg-transparent border-none text-sm font-medium text-gray-600 outline-none cursor-pointer"
                 value={endDate}
                 min={startDate || hoyStr}
+                onKeyDown={(e) => e.preventDefault()}
                 onChange={(e) => setEndDate(e.target.value)}
                 title="Fecha hasta"
               />
