@@ -189,7 +189,7 @@ export default function EventosPage() {
               <div>
                 <p><strong>Nombre:</strong> {successEvent.nombre}</p>
                 <p><strong>Fecha:</strong> {new Date(successEvent.fechaHoraEvento).toLocaleString()}</p>
-                <p><strong>Categoría ID:</strong> {successEvent.idCategoria}</p>
+                <p><strong>Categoría:</strong> {categorias.find(c => c.idCategoria === successEvent.idCategoria)?.nombreCategoria || successEvent.idCategoria}</p>
               </div>
               <div className="flex justify-center md:justify-end">
                 {successEvent.foto ? (

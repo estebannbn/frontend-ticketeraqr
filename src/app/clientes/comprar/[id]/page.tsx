@@ -15,7 +15,6 @@ import Link from "next/link";
 import TicketQr from "../../../components/ticketsQR";
 import { useAuth } from "@/context/AuthContext";
 import AuthModal from "@/app/components/ui/AuthModal";
-import { initMercadoPago, Wallet } from "@mercadopago/sdk-react";
 
 export default function PurchasePage() {
     const { user, isAuthenticated } = useAuth();
@@ -29,12 +28,6 @@ export default function PurchasePage() {
     const [purchasedTicket, setPurchasedTicket] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [preferenceId, setPreferenceId] = useState<string | null>(null);
-
-    useEffect(() => {
-        const mpKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || "TEST-8c269094-0ea3-455b-abb7-ce3ebd1b4df0";
-        initMercadoPago(mpKey, { locale: "es-AR" });
-    }, []);
 
     useEffect(() => {
         if (id) {
@@ -59,13 +52,8 @@ export default function PurchasePage() {
         }
     };
 
-    useEffect(() => {
-        if (selectedTipo && isAuthenticated && fetchingPreferenceFor.current !== selectedTipo.idTipoTicket) {
-            fetchingPreferenceFor.current = selectedTipo.idTipoTicket;
-            handlePurchase();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedTipo, isAuthenticated]);
+    // Removes automatic handlePurchase on selection to prevent overselling
+    // User must now explicitly click "Comprar Entrada"
 
     const handlePurchase = async () => {
         if (!selectedTipo || !evento || purchasing) return;
@@ -104,13 +92,12 @@ export default function PurchasePage() {
                 idTipoTicket: selectedTipo.idTipoTicket
             });
 
-            if (response.data.preferenceId) {
-                setPreferenceId(response.data.preferenceId);
-            } else if (response.data.init_point) {
-                // Fallback a redirección manual
+            if (response.data.init_point) {
+                // Redirección directa al checkout de MercadoPago
                 window.location.href = response.data.init_point;
             } else {
                 setError("Error al iniciar el pago con Mercado Pago.");
+                setPurchasing(false);
             }
         } catch (err: unknown) {
             setError((err as Error).message || "Error al procesar la compra. Por favor, reintenta.");
@@ -271,97 +258,97 @@ export default function PurchasePage() {
 
                             return (
                                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 sticky top-8">
-                                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                    <TicketIcon className="w-6 h-6 text-blue-600" />
-                                    Seleccionar Entradas
-                                </h3>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                        <TicketIcon className="w-6 h-6 text-blue-600" />
+                                        Seleccionar Entradas
+                                    </h3>
 
-                                <div className="space-y-4 mb-8">
-                                    {evento.tipoTickets.map((tipo) => {
-                                        const tipoAgotado = (tipo._count?.tickets || 0) >= tipo.cantMaxPorTipo;
-                                        const isSelected = selectedTipo?.idTipoTicket === tipo.idTipoTicket;
-                                        
-                                        return (
-                                            <button
-                                                key={tipo.idTipoTicket}
-                                                onClick={() => !tipoAgotado && setSelectedTipo(tipo)}
-                                                disabled={tipoAgotado}
-                                                className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 ${
-                                                    tipoAgotado 
-                                                        ? "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed" 
-                                                        : isSelected
-                                                            ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
-                                                            : "border-gray-100 hover:border-blue-200"
-                                                }`}
-                                            >
-                                                <div className="flex justify-between items-center mb-1">
-                                                    <span className="font-bold text-gray-900">{tipo.tipo}</span>
-                                                    <div className="flex items-center gap-3">
-                                                        {tipoAgotado && (
-                                                            <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-lg uppercase tracking-wide">
-                                                                Sin stock
-                                                            </span>
-                                                        )}
-                                                        <span className="text-xl font-extrabold text-blue-600">${tipo.precio}</span>
+                                    <div className="space-y-4 mb-8">
+                                        {evento.tipoTickets.map((tipo) => {
+                                            const tipoAgotado = (tipo._count?.tickets || 0) >= tipo.cantMaxPorTipo;
+                                            const isSelected = selectedTipo?.idTipoTicket === tipo.idTipoTicket;
+
+                                            return (
+                                                <button
+                                                    key={tipo.idTipoTicket}
+                                                    onClick={() => {
+                                                        if (!tipoAgotado) {
+                                                            setSelectedTipo(tipo);
+                                                        }
+                                                    }}
+                                                    disabled={tipoAgotado}
+                                                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 ${tipoAgotado
+                                                            ? "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed"
+                                                            : isSelected
+                                                                ? "border-blue-600 bg-blue-50/50 ring-4 ring-blue-50"
+                                                                : "border-gray-100 hover:border-blue-200"
+                                                        }`}
+                                                >
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="font-bold text-gray-900">{tipo.tipo}</span>
+                                                        <div className="flex items-center gap-3">
+                                                            {tipoAgotado && (
+                                                                <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-lg uppercase tracking-wide">
+                                                                    Sin stock
+                                                                </span>
+                                                            )}
+                                                            <span className="text-xl font-extrabold text-blue-600">${tipo.precio}</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex justify-between items-center text-sm text-gray-500">
-                                                    <span>{tipo.acceso}</span>
-                                                    {tipo.sector && <span className="italic">Sector: {tipo.sector}</span>}
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                {error && (
-                                    <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm mb-6 flex items-start gap-2">
-                                        <span className="font-bold">Error:</span> {error}
-                                    </div>
-                                )}
-
-                                <div className="space-y-6 pt-6 border-t border-gray-100">
-                                    <div className="flex justify-between items-center text-lg mb-4">
-                                        <span className="text-gray-600">Total</span>
-                                        <span className="text-3xl font-black text-gray-900">${selectedTipo?.precio || 0}</span>
-                                    </div>
-
-                                    <div className="w-full">
-                                        {purchasing ? (
-                                            <div className="flex items-center justify-center py-6 bg-gray-50 rounded-2xl border border-gray-100">
-                                                <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
-                                                <span className="text-gray-500 font-medium">Preparando pago seguro...</span>
-                                            </div>
-                                        ) : !isAuthenticated ? (
-                                            <div className="flex flex-col gap-3">
-                                                <button
-                                                    onClick={() => setIsAuthModalOpen(true)}
-                                                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200"
-                                                >
-                                                    Inicia Sesión para Comprar
+                                                    <div className="flex justify-between items-center text-sm text-gray-500">
+                                                        <span>{tipo.acceso}</span>
+                                                        {tipo.sector && <span className="italic">Sector: {tipo.sector}</span>}
+                                                    </div>
                                                 </button>
-                                            </div>
-                                        ) : preferenceId ? (
-                                            <Wallet initialization={{ preferenceId: preferenceId }} />
-                                        ) : (
-                                            <div className="flex flex-col gap-3">
-                                                <span className="text-red-500 font-medium text-center">No se pudo cargar Mercado Pago.</span>
-                                                <button
-                                                    onClick={handlePurchase}
-                                                    disabled={!selectedTipo}
-                                                    className="w-full bg-gray-200 text-gray-800 py-3 rounded-2xl font-bold hover:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Reintentar
-                                                </button>
-                                            </div>
-                                        )}
+                                            );
+                                        })}
                                     </div>
 
-                                    <p className="text-center text-xs text-gray-400 mt-6">
-                                        Al confirmar, aceptás nuestras políticas de reembolso y términos de servicio.
-                                    </p>
+                                    {error && (
+                                        <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm mb-6 flex items-start gap-2">
+                                            <span className="font-bold">Error:</span> {error}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-6 pt-6 border-t border-gray-100">
+                                        <div className="flex justify-between items-center text-lg mb-4">
+                                            <span className="text-gray-600">Total</span>
+                                            <span className="text-3xl font-black text-gray-900">${selectedTipo?.precio || 0}</span>
+                                        </div>
+
+                                        <div className="w-full">
+                                            {purchasing ? (
+                                                <div className="flex items-center justify-center py-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                                    <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+                                                    <span className="text-gray-500 font-medium">Preparando pago seguro...</span>
+                                                </div>
+                                            ) : !isAuthenticated ? (
+                                                <div className="flex flex-col gap-3">
+                                                    <button
+                                                        onClick={() => setIsAuthModalOpen(true)}
+                                                        className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200"
+                                                    >
+                                                        Inicia Sesión para Comprar
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col gap-3">
+                                                    <button
+                                                        onClick={handlePurchase}
+                                                        disabled={!selectedTipo}
+                                                        className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all shadow-xl hover:shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        Comprar Entrada
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p className="text-center text-xs text-gray-400 mt-6">
+                                            Al confirmar, aceptás nuestras políticas de reembolso y términos de servicio.
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
                             );
                         })()}
                     </div>

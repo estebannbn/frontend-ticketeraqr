@@ -277,11 +277,7 @@ export default function MisTicketsPage() {
                                     <div className="text-sm font-semibold text-gray-900">
                                         ${ticket.tipoTicket?.precio || 0}
                                     </div>
-                                    {ticket.estado === 'pendiente' ? (
-                                        <span className="text-xs text-orange-600 font-medium italic">
-                                            Podrás ver el QR cuando finalices el pago
-                                        </span>
-                                    ) : (ticket.estado === 'pendiente_transferencia' as string) ? (
+                                    {ticket.estado === 'pendiente_transferencia' ? (
                                         (ticket as Ticket & { ofertaTransferenciaIdCliente?: number }).ofertaTransferenciaIdCliente === currentClienteId ? (
                                             <div className="flex gap-2">
                                                 <button
