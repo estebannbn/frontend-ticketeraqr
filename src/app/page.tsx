@@ -26,19 +26,21 @@ export default function Home() {
   const hoyStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 
   const loadData = async () => {
-    try {
-      const [eventosData, categoriasData] = await Promise.all([
-        getEventos(),
-        getCategorias()
-      ]);
-      setEventos(eventosData);
-      setFilteredEventos(eventosData);
-      setCategorias(categoriasData);
-    } catch (error) {
-      console.error("Error cargando datos:", error);
-    } finally {
-      setLoading(false);
+    const [eventosRes, categoriasRes] = await Promise.all([
+      getEventos(),
+      getCategorias()
+    ]);
+
+    if (eventosRes.success) {
+      setEventos(eventosRes.data);
+      setFilteredEventos(eventosRes.data);
     }
+    
+    if (categoriasRes.success) {
+      setCategorias(categoriasRes.data);
+    }
+
+    setLoading(false);
   };
 
   useEffect(() => {

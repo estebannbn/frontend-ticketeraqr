@@ -28,44 +28,41 @@ export default function PoliticasPage() {
     }, []);
 
     const loadPoliticas = async () => {
-        try {
-            const [actual, todas] = await Promise.all([
-                getPoliticaActual(),
-                getPoliticas(),
-            ]);
-            setPoliticaActual(actual);
-            setPoliticas(todas);
-        } catch (error) {
-            console.error("Error cargando políticas:", error);
+        const [actualRes, todasRes] = await Promise.all([
+            getPoliticaActual(),
+            getPoliticas(),
+        ]);
+        
+        if (actualRes.success) setPoliticaActual(actualRes.data);
+        if (todasRes.success) setPoliticas(todasRes.data);
+        
+        if (!actualRes.success || !todasRes.success) {
             setMensaje({
                 tipo: "error",
                 texto: "Error al cargar las políticas",
             });
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
     const handleFormSubmit = async (data: PoliticaFormData) => {
         setLoading(true);
         setMensaje(null);
-        try {
-            const nuevaPolitica = await createPolitica(data);
-            setPoliticas((prev) => [nuevaPolitica, ...prev]);
-            setPoliticaActual(nuevaPolitica);
+        const res = await createPolitica(data);
+        if (res.success) {
+            setPoliticas((prev) => [res.data, ...prev]);
+            setPoliticaActual(res.data);
             setMensaje({
                 tipo: "success",
-                texto: `✓ Política creada exitosamente. Ahora el plazo de reembolso es de ${nuevaPolitica.diasReembolso} días.`,
+                texto: `✓ Política creada exitosamente. Ahora el plazo de reembolso es de ${res.data.diasReembolso} días.`,
             });
-        } catch (error) {
-            console.error("Error al procesar política:", error);
+        } else {
             setMensaje({
                 tipo: "error",
-                texto: `Error al crear la política.`,
+                texto: res.error,
             });
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
 

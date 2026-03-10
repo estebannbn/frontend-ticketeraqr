@@ -5,6 +5,8 @@ import { getCategorias } from "@/app/services/categoriaService";
 import { useForm, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { getPoliticaActual } from "@/app/services/politicaService";
+import { Politica } from "@/types/politica";
 
 const eventoSchema = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -28,6 +30,7 @@ interface EventoFormProps {
   loading: boolean;
   tipoTickets: { tipo: string; acceso: string; precio: number; cantMaxPorTipo: number }[];
   onRemoveTicket?: (index: number) => void;
+  serverError?: string | null;
 }
 
 export const EventoForm: React.FC<EventoFormProps> = ({
@@ -38,16 +41,34 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   loading,
   tipoTickets,
   onRemoveTicket,
+  serverError: externalError,
 }) => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [politica, setPolitica] = useState<Politica | null>(null);
+  const [localServerError, setLocalServerError] = useState<string | null>(null);
+
+  const serverError = externalError || localServerError;
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
   // Obtener fecha y hora actual en Argentina (UTC-3)
-  const now = new Date();
-  const argentinaTime = new Date(now.getTime() - 3 * 3600000);
-  const minDateTime = argentinaTime.toISOString().slice(0, 16);
+  const getMinDateTime = () => {
+    const OFFSET_ARG = -3 * 3600000;
+    const nowArg = new Date(Date.now() + OFFSET_ARG);
+    nowArg.setUTCHours(0, 0, 0, 0);
+
+    const diasReembolso = politica?.diasReembolso || 0;
+    const fechaMinima = new Date(nowArg.getTime());
+    fechaMinima.setUTCDate(fechaMinima.getUTCDate() + diasReembolso);
+
+    // Volver a ajustar para el input datetime-local que espera el valor en "local" (ISO slice)
+    // En este caso, el input datetime-local usa la zona horaria del sistema, pero le pasamos el string ISO corregido.
+    // La lógica del backend usa medianoche UTC-3.
+    return fechaMinima.toISOString().slice(0, 16);
+  };
+
+  const minDateTime = getMinDateTime();
 
   const {
     register,
@@ -72,15 +93,27 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   });
 
   useEffect(() => {
-    const loadCategorias = async () => {
+    const loadInitialData = async () => {
       try {
-        const data = await getCategorias();
-        setCategorias(data);
+        const [catRes, polRes] = await Promise.all([
+          getCategorias(),
+          getPoliticaActual()
+        ]);
+
+        if (catRes.success) {
+          setCategorias(catRes.data);
+        } else {
+          console.error("Error cargando categorías:", catRes.error);
+        }
+
+        if (polRes.success) {
+          setPolitica(polRes.data);
+        }
       } catch (error) {
-        console.error("Error cargando categorías:", error);
+        console.error("Error cargando datos iniciales:", error);
       }
     };
-    loadCategorias();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
@@ -125,6 +158,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   };
 
   const onFormSubmit = (data: EventoFormData) => {
+    setLocalServerError(null);
     onSubmit(data);
   };
 
@@ -218,9 +252,10 @@ export const EventoForm: React.FC<EventoFormProps> = ({
             {...register("fechaHoraEvento")}
             min={minDateTime}
             onKeyDown={(e) => e.preventDefault()}
-            className={`w-full p-2 border rounded ${errors.fechaHoraEvento ? 'border-red-500' : 'border-gray-300'}`}
+            className={`w-full p-2 border rounded ${errors.fechaHoraEvento || serverError ? 'border-red-500' : 'border-gray-300'}`}
           />
           {errors.fechaHoraEvento && <p className="text-red-500 text-xs mt-1">{errors.fechaHoraEvento.message}</p>}
+          {serverError && <p className="text-red-500 text-sm font-semibold mt-1 animate-pulse">⚠️ {serverError}</p>}
         </div>
       </div>
 

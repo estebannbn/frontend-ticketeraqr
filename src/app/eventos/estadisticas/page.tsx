@@ -41,8 +41,9 @@ export default function EstadisticasPage() {
       const actualStats = (statsRes as any).data || statsRes;
       setAllData(actualStats);
       setFilteredEventos(actualStats.eventos || []);
-      setCategorias(catsRes);
-      setVentasHora(ventasRes || []);
+      
+      if (catsRes.success) setCategorias(catsRes.data);
+      if (ventasRes.success) setVentasHora(ventasRes.data);
     } catch (err) {
       console.error(err);
     }
@@ -80,16 +81,14 @@ export default function EstadisticasPage() {
     setFilteredEventos(eventosFiltrados);
 
     const fetchFilteredChart = async () => {
-      try {
-        const data = await getVentasReport({
-          idOrganizacion,
-          fechaInicio: fechaInicio || undefined,
-          fechaFin: fechaFin || undefined,
-          idCategoria: categoria ? categoria.toString() : undefined
-        });
-        setVentasHora(data);
-      } catch (err) {
-        console.error(err);
+      const res = await getVentasReport({
+        idOrganizacion,
+        fechaInicio: fechaInicio || undefined,
+        fechaFin: fechaFin || undefined,
+        idCategoria: categoria ? categoria.toString() : undefined
+      });
+      if (res.success) {
+        setVentasHora(res.data);
       }
     };
     fetchFilteredChart();
