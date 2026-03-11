@@ -6,7 +6,7 @@ interface PieChartProps {
 }
 
 export default function PieChart({ data, title }: PieChartProps) {
-    const total = data.reduce((acc, item) => acc + item.value, 0);
+    const total = data.reduce((acc, item) => acc + (Number(item.value) || 0), 0);
 
     // Filter out zero values for the chart but keep them for legend if needed (usually better to hide)
     const activeData = data.filter(d => d.value > 0);

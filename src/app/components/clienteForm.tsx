@@ -187,6 +187,7 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
         <input
           type="date"
           {...register("fechaNacimiento")}
+          max={new Date().toISOString().split("T")[0]}
           onKeyDown={(e) => e.preventDefault()}
           className={`w-full p-2 border rounded ${errors.fechaNacimiento ? 'border-red-500' : ''}`}
         />

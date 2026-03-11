@@ -32,6 +32,16 @@ export default function TicketQr({ ticket, qr: initialQr }: { ticket: Ticket; qr
 
     if (loading) return <p className="text-center text-gray-500">Generando QR...</p>;
 
+    if (ticket.estado === 'consumido' || ticket.estado === 'reembolsado') {
+        return (
+            <div className="text-center p-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                <p className="text-gray-500 font-medium">
+                    El código QR ya no está disponible porque el ticket ha sido {ticket.estado === 'consumido' ? 'consumido' : 'reembolsado'}.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="text-center mt-8">
             <h3 className="text-xl font-semibold text-blue-700 mb-3">

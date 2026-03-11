@@ -45,8 +45,8 @@ export default function VentasChart({ data, type }: VentasChartProps) {
                 <div className="flex-1 overflow-x-auto">
                     <div className="flex items-end gap-2" style={{ height: CHART_HEIGHT + LABEL_HEIGHT }}>
                         {data.map((d) => {
-                            const value = type === "cantidad" ? d.cantidad : d.recaudacion;
-                            const heightPx = (value / maxTick) * CHART_HEIGHT;
+                            const value = (type === "cantidad" ? d.cantidad : d.recaudacion) || 0;
+                            const heightPx = isNaN(value / maxTick) ? 0 : (value / maxTick) * CHART_HEIGHT;
 
                             return (
                                 <div key={d.hora} className="flex flex-col justify-end items-center group min-w-[30px]" style={{ height: '100%' }}>
@@ -59,7 +59,7 @@ export default function VentasChart({ data, type }: VentasChartProps) {
                                         {/* Bar */}
                                         <div
                                             className={`w-full rounded-t-sm transition-all duration-500 ${type === "cantidad" ? "bg-indigo-600 hover:bg-indigo-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
-                                            style={{ height: heightPx, minHeight: value > 0 ? 4 : 0 }}
+                                            style={{ height: `${heightPx}px`, minHeight: value > 0 ? 4 : 0 }}
                                         ></div>
                                     </div>
                                     {/* Label */}

@@ -26,7 +26,7 @@ export default function MisTicketsPage() {
     const { user, loading: authLoading } = useAuth();
 
     useEffect(() => {
-        const fetchTickets = async () => {
+        const fetchInitialTickets = async () => {
             // Wait for auth to be ready
             if (authLoading) return;
 
@@ -37,10 +37,7 @@ export default function MisTicketsPage() {
 
             try {
                 const idUsuario = user.idUsuario;
-                console.log('id Usuario: ', idUsuario);
-
                 if (idUsuario) {
-                    // Primero obtener el idCliente usando el idUsuario
                     const cliente = await getClienteByUsuarioId(Number(idUsuario));
                     if (cliente && cliente.idCliente) {
                         setCurrentClienteId(cliente.idCliente);
@@ -58,7 +55,16 @@ export default function MisTicketsPage() {
             }
         };
 
-        fetchTickets();
+        fetchInitialTickets();
+
+        // Polling para actualizaciones en tiempo real
+        const intervalId = setInterval(() => {
+            if (user && user.idUsuario) {
+                fetchTickets();
+            }
+        }, 10000); // Cada 10 segundos
+
+        return () => clearInterval(intervalId);
     }, [user, authLoading, router]);
 
     const fetchTickets = async () => {
@@ -320,7 +326,7 @@ export default function MisTicketsPage() {
                                                     </button>
                                                 </>
                                             )}
-                                            {ticket.tokenQr && (
+                                            {ticket.tokenQr && ticket.estado === 'pagado' && (
                                                 <button
                                                     onClick={() => handleOpenQr(ticket)}
                                                     className="flex items-center text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors ml-2"
