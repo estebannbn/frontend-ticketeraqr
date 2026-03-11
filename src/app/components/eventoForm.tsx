@@ -7,6 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getPoliticaActual } from "@/app/services/politicaService";
 import { Politica } from "@/types/politica";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const TIMEZONE = "America/Argentina/Buenos_Aires";
 
 const eventoSchema = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -54,18 +62,10 @@ export const EventoForm: React.FC<EventoFormProps> = ({
 
   // Obtener fecha y hora actual en Argentina (UTC-3)
   const getMinDateTime = () => {
-    const OFFSET_ARG = -3 * 3600000;
-    const nowArg = new Date(Date.now() + OFFSET_ARG);
-    nowArg.setUTCHours(0, 0, 0, 0);
-
     const diasReembolso = politica?.diasReembolso || 0;
-    const fechaMinima = new Date(nowArg.getTime());
-    fechaMinima.setUTCDate(fechaMinima.getUTCDate() + diasReembolso);
-
-    // Volver a ajustar para el input datetime-local que espera el valor en "local" (ISO slice)
-    // En este caso, el input datetime-local usa la zona horaria del sistema, pero le pasamos el string ISO corregido.
-    // La lógica del backend usa medianoche UTC-3.
-    return fechaMinima.toISOString().slice(0, 16);
+    const fechaMinima = dayjs().tz(TIMEZONE).startOf('day').add(diasReembolso, 'day');
+    // El input datetime-local espera formato "YYYY-MM-DDTHH:mm" sin Z
+    return fechaMinima.format('YYYY-MM-DDTHH:mm');
   };
 
   const minDateTime = getMinDateTime();
