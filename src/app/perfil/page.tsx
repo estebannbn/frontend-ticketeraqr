@@ -18,6 +18,7 @@ export default function PerfilPage() {
     const [saving, setSaving] = useState(false);
     const [profile, setProfile] = useState<ProfileData | null>(null);
     const [message, setMessage] = useState({ text: "", type: "" });
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     const { user } = useAuth();
 
@@ -38,12 +39,18 @@ export default function PerfilPage() {
                     const clientData = await getClienteByUsuarioId(parseInt(userId as string));
 
                     let prefijo = "+54";
-                    let tel = clientData.telefono || "";
-                    if (tel.startsWith("+")) {
-                        const match = tel.match(/^(\+\d+)(.*)$/);
+                    let tel = "";
+                    const rawTel = clientData.telefono || "";
+                    if (rawTel) {
+                        // Try to extract a leading international prefix like +54, +1, etc.
+                        const match = rawTel.match(/^(\+\d{1,4})([\s\S]*)$/);
                         if (match) {
                             prefijo = match[1];
-                            tel = match[2];
+                            // Strip everything that isn't a digit from the number part
+                            tel = match[2].replace(/\D/g, "");
+                        } else {
+                            // No prefix detected, just keep digits
+                            tel = rawTel.replace(/\D/g, "");
                         }
                     }
 
@@ -98,10 +105,28 @@ export default function PerfilPage() {
 
         setSaving(true);
         setMessage({ text: "", type: "" });
+        setFieldErrors({});
 
         try {
             if (profile.rol === "CLIENTE" && profile.idCliente) {
-                const fullPhone = profile.telefono ? `${('prefijo' in profile ? profile.prefijo : "+54")}${profile.telefono}` : "";
+                // Frontend phone validation: number part only (without prefix)
+                if (profile.telefono) {
+                    const numPart = profile.telefono.replace(/\D/g, "");
+                    if (numPart.length < 10) {
+                        setFieldErrors({ telefono: "El teléfono debe tener al menos 10 dígitos" });
+                        setMessage({ text: "Corrija los errores marcados", type: "error" });
+                        setSaving(false);
+                        return;
+                    }
+                    if (numPart.length > 15) {
+                        setFieldErrors({ telefono: "El teléfono no debe exceder los 15 dígitos" });
+                        setMessage({ text: "Corrija los errores marcados", type: "error" });
+                        setSaving(false);
+                        return;
+                    }
+                }
+                const prefijo = ('prefijo' in profile ? profile.prefijo : "+54") || "+54";
+                const fullPhone = profile.telefono ? `${prefijo}${profile.telefono.replace(/\D/g, "")}` : "";
                 await updateCliente(profile.idCliente, { ...profile, telefono: fullPhone });
             } else if (profile.rol === "ORGANIZACION" && profile.idOrganizacion) {
                 await updateOrganizacion(profile.idOrganizacion, profile);
@@ -112,8 +137,14 @@ export default function PerfilPage() {
         } catch (error: any) {
             console.error("Error actualizando perfil:", error);
             if (error.isValidationError && error.details) {
-                const errorStr = error.details.map((d: any) => d.message).join(", ");
-                setMessage({ text: errorStr, type: "error" });
+                const newFieldErrors: Record<string, string> = {};
+                error.details.forEach((d: any) => {
+                    let fieldName = d.path;
+                    if (fieldName.startsWith("body.")) fieldName = fieldName.replace("body.", "");
+                    newFieldErrors[fieldName] = d.message;
+                });
+                setFieldErrors(newFieldErrors);
+                setMessage({ text: "Corrija los errores marcados", type: "error" });
             } else {
                 setMessage({ text: (error as Error).message || "Ocurrió un error", type: "error" });
             }
@@ -154,10 +185,11 @@ export default function PerfilPage() {
                                         type="text"
                                         value={profile?.nombre || ""}
                                         onChange={e => setProfile(prev => ({ ...prev!, nombre: e.target.value } as ProfileData))}
-                                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none disabled:bg-gray-50"
+                                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none disabled:bg-gray-50 ${fieldErrors.nombre ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                         required
                                         disabled={profile?.rol === 'ADMIN'}
                                     />
+                                    {fieldErrors.nombre && <p className="text-red-500 text-xs mt-1">{fieldErrors.nombre}</p>}
                                 </div>
                             )}
 
@@ -168,9 +200,10 @@ export default function PerfilPage() {
                                         type="text"
                                         value={profile.apellido}
                                         onChange={e => setProfile(prev => ({ ...prev!, apellido: e.target.value } as ProfileData))}
-                                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.apellido ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                         required
                                     />
+                                    {fieldErrors.apellido && <p className="text-red-500 text-xs mt-1">{fieldErrors.apellido}</p>}
                                 </div>
                             )}
 
@@ -183,9 +216,10 @@ export default function PerfilPage() {
                                         type="text"
                                         value={profile.ubicacion}
                                         onChange={e => setProfile(prev => ({ ...prev!, ubicacion: e.target.value } as ProfileData))}
-                                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.ubicacion ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                         required
                                     />
+                                    {fieldErrors.ubicacion && <p className="text-red-500 text-xs mt-1">{fieldErrors.ubicacion}</p>}
                                 </div>
                             )}
 
@@ -197,10 +231,11 @@ export default function PerfilPage() {
                                     type="email"
                                     value={profile?.mail || ""}
                                     onChange={e => setProfile(prev => ({ ...prev!, mail: e.target.value } as ProfileData))}
-                                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none disabled:bg-gray-50"
+                                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none disabled:bg-gray-50 ${fieldErrors.mail ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                     required
                                     disabled={profile?.rol === 'ADMIN'}
                                 />
+                                {fieldErrors.mail && <p className="text-red-500 text-xs mt-1">{fieldErrors.mail}</p>}
                             </div>
 
                             {profile?.rol === 'CLIENTE' && (
@@ -211,20 +246,26 @@ export default function PerfilPage() {
                                             type="date"
                                             value={profile.fechaNacimiento}
                                             onKeyDown={(e) => e.preventDefault()}
+                                            max={new Date().toISOString().split("T")[0]}
                                             onChange={e => setProfile(prev => ({ ...prev!, fechaNacimiento: e.target.value } as ProfileData))}
-                                            className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.fechaNacimiento ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                             required
                                         />
+                                        {fieldErrors.fechaNacimiento && <p className="text-red-500 text-xs mt-1">{fieldErrors.fechaNacimiento}</p>}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-gray-700">Tipo de Documento</label>
-                                        <input
-                                            type="text"
+                                        <select
                                             value={profile.tipoDoc}
                                             onChange={e => setProfile(prev => ({ ...prev!, tipoDoc: e.target.value } as ProfileData))}
-                                            className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none bg-white ${fieldErrors.tipoDoc ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                             required
-                                        />
+                                        >
+                                            <option value="DNI">DNI</option>
+                                            <option value="Pasaporte">Pasaporte</option>
+                                            <option value="Cédula">Cédula</option>
+                                        </select>
+                                        {fieldErrors.tipoDoc && <p className="text-red-500 text-xs mt-1">{fieldErrors.tipoDoc}</p>}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-gray-700">Nro de Documento</label>
@@ -232,25 +273,23 @@ export default function PerfilPage() {
                                             type="text"
                                             value={profile.nroDoc}
                                             onChange={e => setProfile(prev => ({ ...prev!, nroDoc: e.target.value } as ProfileData))}
-                                            className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                            className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.nroDoc ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                             required
                                         />
+                                        {fieldErrors.nroDoc && <p className="text-red-500 text-xs mt-1">{fieldErrors.nroDoc}</p>}
                                     </div>
                                     {/* Teléfono */}
                                     <div className="space-y-2">
                                         <label className="text-sm font-bold text-gray-700">Teléfono</label>
                                         <div className="flex gap-2">
                                             <select
-                                                value={('prefijo' in profile ? profile.prefijo : "+54")}
+                                                value={('prefijo' in profile ? (profile.prefijo || "+54") : "+54")}
                                                 onChange={e => setProfile(prev => ({ ...prev!, prefijo: e.target.value } as ProfileData))}
-                                                className="w-36 px-2 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none bg-white"
+                                                className={`w-36 px-2 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none bg-white`}
                                             >
+                                                <option value="+54">Argentina (+54)</option>
                                                 <option value="+93">Afganistán (+93)</option>
                                                 <option value="+355">Albania (+355)</option>
-                                                <option value="+213">Argelia (+213)</option>
-                                                <option value="+376">Andorra (+376)</option>
-                                                <option value="+244">Angola (+244)</option>
-                                                <option value="+54">Argentina (+54)</option>
                                                 <option value="+374">Armenia (+374)</option>
                                                 <option value="+297">Aruba (+297)</option>
                                                 <option value="+61">Australia (+61)</option>
@@ -435,11 +474,17 @@ export default function PerfilPage() {
                                             <input
                                                 type="tel"
                                                 value={profile.telefono || ""}
-                                                onChange={e => setProfile(prev => ({ ...prev!, telefono: e.target.value } as ProfileData))}
-                                                className="flex-1 px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/\D/g, ''); // Strip non-digits
+                                                    setProfile(prev => ({ ...prev!, telefono: val } as ProfileData));
+                                                    // Clear phone error when user edits
+                                                    if (fieldErrors.telefono) setFieldErrors(prev => ({ ...prev, telefono: '' }));
+                                                }}
+                                                className={`flex-1 px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.telefono ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                                 placeholder="Tu número de teléfono"
                                             />
                                         </div>
+                                        {fieldErrors.telefono && <p className="text-red-500 text-xs mt-1">{fieldErrors.telefono}</p>}
                                     </div>
                                 </>
                             )}
@@ -453,9 +498,10 @@ export default function PerfilPage() {
                                         type="text"
                                         value={profile.cuit}
                                         onChange={e => setProfile(prev => ({ ...prev!, cuit: e.target.value } as ProfileData))}
-                                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.cuit ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                         required
                                     />
+                                    {fieldErrors.cuit && <p className="text-red-500 text-xs mt-1">{fieldErrors.cuit}</p>}
                                 </div>
                             )}
                         </div>
@@ -470,9 +516,10 @@ export default function PerfilPage() {
                                     type="password"
                                     value={profile?.contraseña || ""}
                                     onChange={e => setProfile(prev => ({ ...prev!, contraseña: e.target.value } as ProfileData))}
-                                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-600 transition-all outline-none"
+                                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all outline-none ${fieldErrors.contraseña ? 'border-red-500 focus:ring-red-100' : 'border-gray-100 focus:ring-indigo-100 focus:border-indigo-600'}`}
                                     placeholder="••••••••"
                                 />
+                                {fieldErrors.contraseña && <p className="text-red-500 text-xs mt-1">{fieldErrors.contraseña}</p>}
                             </div>
                         </div>
 

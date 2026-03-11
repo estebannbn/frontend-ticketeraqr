@@ -203,12 +203,12 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
             onChange={(e) => setCountryCode(e.target.value)}
             className="w-24 p-2 border rounded bg-gray-50"
           >
+            <option value="+54">Argentina (+54)</option>
             <option value="+93">Afganistán (+93)</option>
             <option value="+355">Albania (+355)</option>
             <option value="+213">Argelia (+213)</option>
             <option value="+376">Andorra (+376)</option>
             <option value="+244">Angola (+244)</option>
-            <option value="+54">Argentina (+54)</option>
             <option value="+374">Armenia (+374)</option>
             <option value="+297">Aruba (+297)</option>
             <option value="+61">Australia (+61)</option>
@@ -391,7 +391,11 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
           </select>
           <input
             type="tel"
-            {...register("telefono")}
+            {...register("telefono", {
+              onChange: (e) => {
+                e.target.value = e.target.value.replace(/\D/g, ''); // Strip non-digits
+              }
+            })}
             className={`flex-1 p-2 border rounded ${errors.telefono ? 'border-red-500' : ''}`}
             placeholder="Ej: 1122334455"
           />
