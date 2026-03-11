@@ -29,6 +29,10 @@ export const EventoTable: React.FC<EventoTableProps> = ({
   const [nombreFiltro, setNombreFiltro] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
 
+  // paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const openDateModal = (evento: Evento) => {
     setSelectedEvento(evento);
     setNuevaFecha(new Date(evento.fechaHoraEvento).toISOString().slice(0, 16));
@@ -78,6 +82,13 @@ export const EventoTable: React.FC<EventoTableProps> = ({
     return coincideNombre && coincideCategoria;
   });
 
+  // Cálculo de paginación
+  const totalItems = eventosFiltrados.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const eventosPaginados = eventosFiltrados.slice(startIndex, endIndex);
+
   return (
     <div>
 
@@ -88,13 +99,19 @@ export const EventoTable: React.FC<EventoTableProps> = ({
           type="text"
           placeholder="Buscar por nombre..."
           value={nombreFiltro}
-          onChange={(e) => setNombreFiltro(e.target.value)}
+          onChange={(e) => {
+            setNombreFiltro(e.target.value);
+            setCurrentPage(1);
+          }}
           className="border rounded-lg px-3 py-2 w-64"
         />
 
         <select
           value={categoriaFiltro}
-          onChange={(e) => setCategoriaFiltro(e.target.value)}
+          onChange={(e) => {
+            setCategoriaFiltro(e.target.value);
+            setCurrentPage(1);
+          }}
           className="border rounded-lg px-3 py-2"
         >
           <option value="">Todas las categorías</option>
@@ -106,7 +123,7 @@ export const EventoTable: React.FC<EventoTableProps> = ({
         </select>
       </div>
 
-      <div className="overflow-x-auto rounded-lg shadow">
+      <div className="overflow-x-auto rounded-lg shadow bg-white">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -124,7 +141,7 @@ export const EventoTable: React.FC<EventoTableProps> = ({
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {eventosFiltrados.map((evento) => (
+            {eventosPaginados.map((evento) => (
               <tr key={evento.idEvento}>
                 <td className="px-4 py-3 font-semibold">{evento.nombre}</td>
 
@@ -145,10 +162,10 @@ export const EventoTable: React.FC<EventoTableProps> = ({
                 <td className="px-4 py-3">
                   <span
                     className={`px-2 py-1 rounded text-xs font-bold ${evento.estado === "CANCELADO"
-                        ? "bg-red-100 text-red-700"
-                        : evento.estado === "FINALIZADO"
-                          ? "bg-gray-100 text-gray-700"
-                          : "bg-green-100 text-green-700"
+                      ? "bg-red-100 text-red-700"
+                      : evento.estado === "FINALIZADO"
+                        ? "bg-gray-100 text-gray-700"
+                        : "bg-green-100 text-green-700"
                       }`}
                   >
                     {evento.estado || "ACTIVO"}
@@ -184,7 +201,7 @@ export const EventoTable: React.FC<EventoTableProps> = ({
                 </td>
 
                 <td className="px-4 py-3 space-x-2 whitespace-nowrap">
-                  {evento.estado !== "CANCELADO" ? (
+                  {evento.estado === "ACTIVO" || !evento.estado ? (
                     <>
                       <button
                         onClick={() => openDateModal(evento)}
@@ -200,11 +217,8 @@ export const EventoTable: React.FC<EventoTableProps> = ({
                         Cancelar
                       </button>
                     </>
-                  ) : (
+                  ) : evento.estado === "CANCELADO" ? (
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-500 italic text-sm">
-                        Sin acciones
-                      </span>
                       <button
                         onClick={() => onDelete(evento.idEvento)}
                         className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-colors"
@@ -212,6 +226,10 @@ export const EventoTable: React.FC<EventoTableProps> = ({
                         Eliminar
                       </button>
                     </div>
+                  ) : (
+                    <span className="text-gray-500 italic text-sm">
+                      Sin acciones
+                    </span>
                   )}
                 </td>
               </tr>
@@ -221,6 +239,74 @@ export const EventoTable: React.FC<EventoTableProps> = ({
 
         {loading && (
           <div className="p-4 text-center text-gray-500">Cargando...</div>
+        )}
+
+        {/* PAGINACIÓN */}
+        {totalPages > 1 && (
+          <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Siguiente
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Mostrando <span className="font-medium">{startIndex + 1}</span> a <span className="font-medium">{Math.min(endIndex, totalItems)}</span> de <span className="font-medium">{totalItems}</span> resultados
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Anterior</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(idx + 1)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        currentPage === idx + 1
+                          ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600"
+                          : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <span className="sr-only">Siguiente</span>
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
