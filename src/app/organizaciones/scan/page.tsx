@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { consumirTicket } from "@/app/services/ticketService";
+import { consumirTicket, verificarTicket } from "@/app/services/ticketService";
 import { Ticket } from "@/types/tickets";
 import RoleGuard from "@/app/components/RoleGuard";
+import { CheckCircle, XCircle, AlertTriangle, Loader2 } from "lucide-react";
 
 
 export default function QrScanPage() {
@@ -14,6 +15,7 @@ export default function QrScanPage() {
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [scanning, setScanning] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [tokenQr, setTokenQr] = useState<string | null>(null);
 
     // Reset state when switching modes
     useEffect(() => {
@@ -26,25 +28,41 @@ export default function QrScanPage() {
         setSuccessMsg(null);
         setScanning(true);
         setLoading(false);
+        setTokenQr(null);
     };
 
     const handleScan = async (detectedCodes: { rawValue: string }[]) => {
         if (!scanning || detectedCodes.length === 0) return;
 
-        const tokenQr = detectedCodes[0].rawValue;
-        if (!tokenQr) return;
+        const rawValue = detectedCodes[0].rawValue;
+        if (!rawValue) return;
 
         setScanning(false);
         setLoading(true);
         setError(null);
+        setTokenQr(rawValue);
 
+        try {
+            const ticketData = await verificarTicket(rawValue);
+            setData(ticketData);
+        } catch (err: unknown) {
+            setError((err as Error).message || "Error al verificar el código QR.");
+            setScanning(false); 
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConfirmarConsumo = async () => {
+        if (!tokenQr) return;
+        setLoading(true);
+        setError(null);
         try {
             const ticketComsumido = await consumirTicket(tokenQr);
             setData(ticketComsumido);
             setSuccessMsg("Ticket consumido con éxito. ¡Bienvenido!");
         } catch (err: unknown) {
-            setError((err as Error).message || "Error al procesar el código QR.");
-            setScanning(false); // Stop scanning on error, user can retry
+            setError((err as Error).message || "Error al consumir el ticket.");
         } finally {
             setLoading(false);
         }
@@ -121,8 +139,27 @@ export default function QrScanPage() {
                                     </div>
 
                                     {successMsg && (
-                                        <div className="p-4 bg-green-50 text-green-700 rounded-lg border border-green-100 text-center mt-4">
+                                        <div className="p-4 bg-green-50 text-green-700 rounded-lg border border-green-100 flex items-center gap-3 mt-4">
+                                            <CheckCircle className="h-5 w-5" />
                                             <p className="font-bold">{successMsg}</p>
+                                        </div>
+                                    )}
+
+                                    {!successMsg && data.estado === 'pagado' && (
+                                        <button
+                                            onClick={handleConfirmarConsumo}
+                                            disabled={loading}
+                                            className="w-full mt-6 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle className="h-5 w-5" />}
+                                            Confirmar Acceso
+                                        </button>
+                                    )}
+
+                                    {!successMsg && data.estado !== 'pagado' && (
+                                        <div className="p-4 bg-orange-50 text-orange-700 rounded-lg border border-orange-100 flex items-center gap-3 mt-4">
+                                            <AlertTriangle className="h-5 w-5" />
+                                            <p className="font-semibold text-sm">Este ticket no puede ser consumido (Estado: {data.estado})</p>
                                         </div>
                                     )}
                                 </div>
@@ -130,7 +167,7 @@ export default function QrScanPage() {
 
                             <button
                                 onClick={resetState}
-                                className="mt-6 px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium"
+                                className="mt-6 px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium w-full"
                             >
                                 {scanning ? "Cancelar" : "Escanear otro"}
                             </button>

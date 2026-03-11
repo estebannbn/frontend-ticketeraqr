@@ -101,13 +101,13 @@ export default function EstadisticasPage() {
       </p>
     );
 
-  const totalVendidos = filteredEventos.reduce((a, e) => a + e.vendidos, 0);
+  const totalVendidos = filteredEventos.reduce((a, e) => a + (Number(e.vendidos) || 0), 0);
   const totalReembolsados = filteredEventos.reduce(
-    (a, e) => a + e.reembolsados,
+    (a, e) => a + (Number(e.reembolsados) || 0),
     0
   );
   const totalRecaudacion = filteredEventos.reduce(
-    (a, e) => a + e.recaudacion,
+    (a, e) => a + (Number(e.recaudacion) || 0),
     0
   );
 

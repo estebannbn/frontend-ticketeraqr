@@ -67,6 +67,19 @@ export async function consumirTicket(tokenQr: string) {
   const data = await res.json();
   return data.data;
 }
+
+// ✅ Verificar ticket por QR token (sin consumir)
+export async function verificarTicket(tokenQr: string) {
+  const res = await fetch(`${API_URL}/api/tickets/token/${tokenQr}`);
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Error al verificar ticket");
+  }
+  const data = await res.json();
+  return data.data;
+}
+
 export async function obtenerQrPorTicket(nroTicket: number): Promise<{ qr: string }> {
   const res = await fetch(`${API_URL}/api/tickets/qr/${nroTicket}`);
   if (!res.ok) throw new Error("Error al obtener el código QR");
