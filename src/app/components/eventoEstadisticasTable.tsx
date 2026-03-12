@@ -34,7 +34,7 @@ export default function EventoEstadisticasTable({ eventos, totalEventos, categor
             <thead className="sticky top-0 z-10">
               <tr className="bg-blue-600 text-white">
                 <th className="px-4 py-3 text-left">Nombre</th>
-                <th className="px-4 py-3 text-center">Fecha</th>
+                <th className="px-4 py-3 text-center">Fecha de Finalización</th>
                 <th className="px-4 py-3 text-center">Vendidos</th>
                 <th className="px-4 py-3 text-center">Reembolsados</th>
                 <th className="px-4 py-3 text-center">Recaudación</th>
@@ -52,7 +52,7 @@ export default function EventoEstadisticasTable({ eventos, totalEventos, categor
                     >
                       <td className="px-4 py-3 text-gray-800">{e.nombre}</td>
                       <td className="px-4 py-3 text-center text-gray-700">
-                        {new Date(e.fecha).toLocaleDateString()}
+                        {new Date(e.fecha).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center font-medium text-blue-700">
                         {e.vendidos}
