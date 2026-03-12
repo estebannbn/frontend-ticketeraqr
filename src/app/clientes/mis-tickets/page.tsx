@@ -152,6 +152,8 @@ export default function MisTicketsPage() {
                 return "bg-yellow-100 text-yellow-800 border-yellow-200";
             case "pendiente_transferencia":
                 return "bg-purple-100 text-purple-800 border-purple-200";
+            case "pendiente":
+                return "bg-orange-100 text-orange-800 border-orange-200 animate-pulse";
             default:
                 return "bg-blue-100 text-blue-800 border-blue-200";
         }
@@ -164,6 +166,7 @@ export default function MisTicketsPage() {
             case "expirado": return "Vencido";
             case "reembolsado": return "Reembolsado";
             case "pendiente_transferencia": return "Transfiriendo";
+            case "pendiente": return "Pendiente de Pago";
             default: return status;
         }
     };

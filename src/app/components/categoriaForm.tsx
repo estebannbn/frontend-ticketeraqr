@@ -12,6 +12,7 @@ const categoriaSchema = z.object({
     .trim()
     .min(3, "El nombre debe tener al menos 3 caracteres.")
     .max(50, "El nombre no puede superar los 50 caracteres.")
+    .regex(/^[^0-9]*$/, "El nombre de la categoría no puede contener números.")
     .refine((value) => value.length > 0, {
       message: "El nombre de la categoría es obligatorio.",
     }),
@@ -124,6 +125,9 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
           {...register("nombreCategoria")}
           onInput={(e) => {
             const target = e.target as HTMLInputElement;
+            // Primero removemos cualquier número
+            target.value = target.value.replace(/[0-9]/g, '');
+            // Luego aplicamos la capitalización
             if (target.value.length > 0) {
               target.value = target.value.charAt(0).toUpperCase() + target.value.slice(1).toLowerCase();
             }
