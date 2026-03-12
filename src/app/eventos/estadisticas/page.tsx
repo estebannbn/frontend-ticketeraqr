@@ -8,15 +8,12 @@ import { useAuth } from "@/context/AuthContext";
 import { Categoria } from "@/types/categoria";
 import { EstadisticasResponse, EstadisticaEvento } from "@/types/evento";
 import EventoEstadisticasTable from "@/app/components/eventoEstadisticasTable";
-import VentasChart from "@/app/components/VentasChart";
-import { getVentasReport, ReporteHora } from "@/app/services/eventosService";
 
 export default function EstadisticasPage() {
   const { user } = useAuth();
   const [allData, setAllData] = useState<EstadisticasResponse | null>(null);
   const [filteredEventos, setFilteredEventos] = useState<EstadisticaEvento[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [ventasHora, setVentasHora] = useState<ReporteHora[]>([]);
   const [idOrganizacion, setIdOrganizacion] = useState<number | undefined>(undefined);
 
   const [search, setSearch] = useState("");
@@ -33,17 +30,15 @@ export default function EstadisticasPage() {
         setIdOrganizacion(idOrg);
       }
 
-      const [statsRes, catsRes, ventasRes] = await Promise.all([
+      const [statsRes, catsRes] = await Promise.all([
         getEstadisticasEventos(idOrg),
-        getCategorias(),
-        getVentasReport({ idOrganizacion: idOrg })
+        getCategorias()
       ]);
       const actualStats = (statsRes as any).data || statsRes;
       setAllData(actualStats);
       setFilteredEventos(actualStats.eventos || []);
-      
+
       if (catsRes.success) setCategorias(catsRes.data);
-      if (ventasRes.success) setVentasHora(ventasRes.data);
     } catch (err) {
       console.error(err);
     }
@@ -65,10 +60,13 @@ export default function EstadisticasPage() {
     }
 
     if (fechaInicio && fechaFin) {
-      const inicio = new Date(fechaInicio);
-      const fin = new Date(fechaFin);
+      const inicio = new Date(`${fechaInicio}T00:00:00`);
+      const fin = new Date(`${fechaFin}T23:59:59`);
       eventosFiltrados = eventosFiltrados.filter(
-        (e) => new Date(e.fecha) >= inicio && new Date(e.fecha) <= fin
+        (e) => {
+          const eventoFecha = new Date(e.fecha);
+          return eventoFecha >= inicio && eventoFecha <= fin;
+        }
       );
     }
 
@@ -79,19 +77,6 @@ export default function EstadisticasPage() {
     }
 
     setFilteredEventos(eventosFiltrados);
-
-    const fetchFilteredChart = async () => {
-      const res = await getVentasReport({
-        idOrganizacion,
-        fechaInicio: fechaInicio || undefined,
-        fechaFin: fechaFin || undefined,
-        idCategoria: categoria ? categoria.toString() : undefined
-      });
-      if (res.success) {
-        setVentasHora(res.data);
-      }
-    };
-    fetchFilteredChart();
   }, [search, fechaInicio, fechaFin, categoria, allData, idOrganizacion]);
 
   if (!allData)
@@ -217,12 +202,6 @@ export default function EstadisticasPage() {
               <p className="text-gray-600">Recaudación Promedio</p>
             </div>
           </div>
-        </div>
-
-        {/* Gráfico de Ventas */}
-        <div className="bg-white p-6 rounded-2xl shadow-md">
-          <h2 className="text-2xl font-semibold text-blue-700 mb-4">📈 Ventas por Hora</h2>
-          <VentasChart data={ventasHora} type="cantidad" />
         </div>
 
         {/* Tabla de eventos */}

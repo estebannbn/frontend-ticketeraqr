@@ -31,15 +31,11 @@ export default function VentasReportePage() {
         idOrganizacion: ""
     });
 
-    // Cargar catalogos al inicio
+    // Cargar categorias al inicio
     useEffect(() => {
         const loadCatalogs = async () => {
-            const [catsRes, evtsRes] = await Promise.all([
-                getCategorias(),
-                getEventos()
-            ]);
+            const catsRes = await getCategorias();
             if (catsRes.success) setCategorias(catsRes.data);
-            if (evtsRes.success) setEventos(evtsRes.data);
         };
         loadCatalogs();
     }, []);
@@ -55,7 +51,14 @@ export default function VentasReportePage() {
             }
 
             console.log("Fetching report with filters:", { ...filters, idOrganizacion: idOrg });
-            const res = await getVentasReport({ ...filters, idOrganizacion: idOrg });
+
+            const [res, evtsRes] = await Promise.all([
+                getVentasReport({ ...filters, idOrganizacion: idOrg }),
+                getEventos(idOrg ? Number(idOrg) : undefined)
+            ]);
+
+            if (evtsRes.success) setEventos(evtsRes.data);
+
             if (res.success) {
                 console.log("Report data received:", res.data);
                 setData(res.data);
