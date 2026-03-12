@@ -88,7 +88,7 @@ export default function PieChart({ data, title }: PieChartProps) {
                         {slices.map((slice, i) => (
                             <div key={i} className="flex items-center text-sm text-gray-600">
                                 <span className="w-3 h-3 rounded-full mr-2 shrink-0" style={{ backgroundColor: slice.color }}></span>
-                                <span className="truncate flex-1 mr-2">{slice.label} hrs</span>
+                                <span className="truncate flex-1 mr-2">{slice.label}</span>
                                 <span className="font-semibold">{slice.percent}%</span>
                             </div>
                         ))}

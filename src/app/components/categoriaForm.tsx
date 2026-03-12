@@ -67,7 +67,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     } catch (err: any) {
       console.error("Error al crear categoría:", err);
       let parsedError: any = null;
-      let errorMsg = err?.message || "Ocurrió un error inesperado. Intente nuevamente.";
+      const errorMsg = err?.message || "Ocurrió un error inesperado. Intente nuevamente.";
 
       try {
         parsedError = JSON.parse(err.message);
