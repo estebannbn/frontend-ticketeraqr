@@ -214,8 +214,7 @@ export default function PurchasePage() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-purple-600 font-bold uppercase tracking-wider">Lugar</p>
-                                            <p className="text-lg font-semibold text-gray-900">Ubicación del evento</p>
-                                            <p className="text-gray-600">Confirma en tu ticket</p>
+                                            <p className="text-lg font-semibold text-gray-900">{evento.ubicacion}</p>
                                         </div>
                                     </div>
                                 </div>
