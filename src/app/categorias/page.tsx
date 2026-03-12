@@ -40,24 +40,31 @@ function AdminCategoriasView() {
   }, []);
 
   const loadCategorias = async () => {
-    const res = await getCategorias();
-    if (res.success) {
-      setCategorias(res.data);
-    } else {
-      console.error("Error al cargar categorías:", res.error);
+    try {
+      const res = await getCategorias();
+      if (res.success) {
+        setCategorias(res.data);
+      } else {
+        console.error("Error al cargar categorías:", res.error);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleFormSubmit = async (data: CategoriaFormData) => {
     setLoading(true);
-    const res = await createCategoria(data);
-    if (res.success) {
-      await loadCategorias();
-    } else {
-      alert(res.error);
+    try {
+      const res = await createCategoria(data);
+      if (res.success) {
+        await loadCategorias();
+      } else {
+        // Lanzamos el error para que CategoriaForm lo capture en su propio try-catch
+        throw new Error(typeof res.error === 'string' ? res.error : JSON.stringify(res.error));
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDeleteRequest = (categoria: Categoria) => {
@@ -68,15 +75,18 @@ function AdminCategoriasView() {
   const handleDeleteConfirm = async () => {
     if (!categoriaToDelete) return;
     setLoading(true);
-    const res = await deleteCategoria(categoriaToDelete.idCategoria);
-    if (res.success) {
-      await loadCategorias();
-    } else {
-      alert(res.error);
+    try {
+      const res = await deleteCategoria(categoriaToDelete.idCategoria);
+      if (res.success) {
+        await loadCategorias();
+      } else {
+        alert(res.error);
+      }
+    } finally {
+      setShowDeleteModal(false);
+      setCategoriaToDelete(null);
+      setLoading(false);
     }
-    setShowDeleteModal(false);
-    setCategoriaToDelete(null);
-    setLoading(false);
   };
 
 

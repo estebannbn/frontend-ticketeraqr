@@ -28,6 +28,23 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
 }) => {
   const [generalError, setGeneralError] = useState("");
 
+  // Helper para detectar si un campo tiene error (local o del servidor)
+  const hasError = (fieldName: string, keywords: string[] = []): boolean => {
+    if (errors[fieldName as keyof Categoria]) return true;
+    if (!generalError) return false;
+    const lowerError = generalError.toLowerCase();
+    const allKeywords = [fieldName.toLowerCase(), ...keywords.map(k => k.toLowerCase())];
+    return allKeywords.some(kw => lowerError.includes(kw));
+  };
+
+  const getLabelStyle = (fieldName: string, keywords: string[] = []) => {
+    return `block mb-2 text-sm font-semibold transition-colors ${hasError(fieldName, keywords) ? 'text-red-600 flex items-center gap-1' : 'text-gray-700'}`;
+  };
+
+  const getInputStyle = (fieldName: string, baseClass: string, keywords: string[] = []) => {
+    return `${baseClass} transition-all ${hasError(fieldName, keywords) ? 'border-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:border-blue-500'}`;
+  };
+
   const {
     register,
     handleSubmit,
@@ -47,16 +64,18 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     try {
       setGeneralError("");
       await onSubmit(data);
-      reset({ nombreCategoria: "" });
     } catch (err: any) {
+      console.error("Error al crear categoría:", err);
       let parsedError: any = null;
+      let errorMsg = err?.message || "Ocurrió un error inesperado. Intente nuevamente.";
+
       try {
         parsedError = JSON.parse(err.message);
       } catch (e) {
         // Not a JSON error string
       }
 
-      const isValidation = parsedError?.isValidationError || err.isValidationError;
+      const isValidation = parsedError?.isValidationError || err.isValidationError || errorMsg.includes("validación");
       const details = parsedError?.details || err.details;
 
       if (isValidation && details) {
@@ -71,12 +90,13 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
           }
         });
         if (!isHandled) {
-          setGeneralError("Revise los datos ingresados e intente nuevamente.");
+          setGeneralError(errorMsg);
         }
       } else {
-        const errorMsg = err?.message || (err?.isValidationError ? "Por favor, revise los errores indicados." : "Ocurrió un error inesperado. Intente nuevamente.");
-        setGeneralError(typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg));
+        setGeneralError(errorMsg);
       }
+    } finally {
+      setValue("nombreCategoria", "");
     }
   };
 
@@ -93,8 +113,8 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
       )}
 
       <div>
-        <label htmlFor="nombreCategoria" className="block mb-2 text-sm font-medium">
-          Nombre de la Categoría
+        <label htmlFor="nombreCategoria" className={getLabelStyle("nombreCategoria", ["categoría", "nombre"])}>
+          {hasError("nombreCategoria", ["categoría", "nombre"]) && <span>⚠️</span>} Nombre de la Categoría
         </label>
 
         <input
@@ -108,11 +128,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
               target.value = target.value.charAt(0).toUpperCase() + target.value.slice(1).toLowerCase();
             }
           }}
-          className={`w-full p-2 border rounded outline-none transition 
-          ${errors.nombreCategoria
-              ? "border-red-500 focus:ring-2 focus:ring-red-200"
-              : "border-gray-300 focus:ring-2 focus:ring-blue-200"
-            }`}
+          className={getInputStyle("nombreCategoria", "w-full p-2 border rounded outline-none transition", ["categoría", "nombre"])}
         />
 
         {errors.nombreCategoria && (
