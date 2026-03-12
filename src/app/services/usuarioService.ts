@@ -41,3 +41,16 @@ export async function resetPassword(token: string, nuevaContraseña: string): Pr
     }
     return await res.json();
 }
+
+export async function updateUsuario(idUsuario: number, data: { mail?: string; contraseña?: string }): Promise<ApiResponse<Usuario>> {
+    const res = await fetch(`${baseUrl}/api/usuarios/${idUsuario}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Error al actualizar usuario");
+    }
+    return await res.json();
+}

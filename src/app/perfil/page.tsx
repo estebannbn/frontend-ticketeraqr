@@ -5,6 +5,7 @@ import { User, Lock, Mail, Save, MapPin, Building2, CreditCard } from "lucide-re
 import { useAuth } from "@/context/AuthContext";
 import { updateCliente, getClienteByUsuarioId } from "@/app/services/clientService";
 import { updateOrganizacion, getOrganizacionByUsuarioId } from "@/app/services/organizacionService";
+import { updateUsuario } from "@/app/services/usuarioService";
 import { ClienteFormData } from "@/types/cliente";
 import { OrganizacionFormData } from "@/types/organizacion";
 
@@ -130,6 +131,10 @@ export default function PerfilPage() {
                 await updateCliente(profile.idCliente, { ...profile, telefono: fullPhone });
             } else if (profile.rol === "ORGANIZACION" && profile.idOrganizacion) {
                 await updateOrganizacion(profile.idOrganizacion, profile);
+            } else if (profile.rol === "ADMIN" && user?.idUsuario) {
+                if (profile.contraseña) {
+                    await updateUsuario(Number(user.idUsuario), { contraseña: profile.contraseña });
+                }
             }
 
             setMessage({ text: "Perfil actualizado con éxito", type: "success" });
