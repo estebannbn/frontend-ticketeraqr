@@ -1,4 +1,3 @@
-// UI Improvement - Enhanced Error Highlighting and Visibility System
 import { useEffect, useState } from "react";
 import { EventoFormData } from "@/types/evento";
 import { Categoria } from "@/types/categoria";
