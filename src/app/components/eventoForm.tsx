@@ -60,6 +60,24 @@ export const EventoForm: React.FC<EventoFormProps> = ({
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
+  // Helper para detectar si un campo tiene error (local o del servidor)
+  const hasError = (fieldName: keyof EventoFormData, keywords: string[] = []): boolean => {
+    if (errors[fieldName]) return true;
+    if (!serverError) return false;
+    const lowerError = serverError.toLowerCase();
+    // Siempre incluimos el nombre del campo en minúsculas como palabra clave
+    const allKeywords = [fieldName.toString().toLowerCase(), ...keywords.map(k => k.toLowerCase())];
+    return allKeywords.some(kw => lowerError.includes(kw));
+  };
+
+  const getLabelStyle = (fieldName: keyof EventoFormData, keywords: string[] = []) => {
+    return `block mb-2 text-sm font-semibold transition-colors ${hasError(fieldName, keywords) ? 'text-red-600 flex items-center gap-1' : 'text-gray-700'}`;
+  };
+
+  const getInputStyle = (fieldName: keyof EventoFormData, baseClass: string, keywords: string[] = []) => {
+    return `${baseClass} transition-all ${hasError(fieldName, keywords) ? 'border-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:border-blue-500'}`;
+  };
+
   // Obtener fecha y hora actual en Argentina (UTC-3)
   const getMinDateTime = () => {
     const diasReembolso = politica?.diasReembolso || 0;
@@ -168,37 +186,45 @@ export const EventoForm: React.FC<EventoFormProps> = ({
       className="space-y-4 p-4 bg-white rounded-lg shadow"
     >
       <div>
-        <label className="block mb-2 text-sm font-medium">Nombre</label>
+        <label className={getLabelStyle("nombre")}>
+          {hasError("nombre") && <span>⚠️</span>} Nombre
+        </label>
         <input
           type="text"
           {...register("nombre")}
-          className={`w-full p-2 border rounded ${errors.nombre ? 'border-red-500' : 'border-gray-300'}`}
+          className={getInputStyle("nombre", "w-full p-2 border rounded")}
         />
         {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
       </div>
 
       <div>
-        <label className="block mb-2 text-sm font-medium">Descripción</label>
+        <label className={getLabelStyle("descripcion")}>
+          {hasError("descripcion") && <span>⚠️</span>} Descripción
+        </label>
         <textarea
           {...register("descripcion")}
-          className={`w-full p-2 border rounded ${errors.descripcion ? 'border-red-500' : 'border-gray-300'}`}
+          className={getInputStyle("descripcion", "w-full p-2 border rounded")}
           rows={3}
         />
         {errors.descripcion && <p className="text-red-500 text-xs mt-1">{errors.descripcion.message}</p>}
       </div>
 
       <div>
-        <label className="block mb-2 text-sm font-medium">Ubicación</label>
+        <label className={getLabelStyle("ubicacion")}>
+          {hasError("ubicacion") && <span>⚠️</span>} Ubicación
+        </label>
         <input
           type="text"
           {...register("ubicacion")}
-          className={`w-full p-2 border rounded ${errors.ubicacion ? 'border-red-500' : 'border-gray-300'}`}
+          className={getInputStyle("ubicacion", "w-full p-2 border rounded")}
         />
         {errors.ubicacion && <p className="text-red-500 text-xs mt-1">{errors.ubicacion.message}</p>}
       </div>
 
       <div>
-        <label className="block mb-2 text-sm font-medium">Foto del Evento</label>
+        <label className={getLabelStyle("foto")}>
+          {hasError("foto") && <span>⚠️</span>} Foto del Evento
+        </label>
         <div className="flex gap-4 items-start">
           <div className="flex-1 space-y-2">
             <input
@@ -206,7 +232,7 @@ export const EventoForm: React.FC<EventoFormProps> = ({
               accept="image/*"
               onChange={handleImageUpload}
               disabled={uploadingImage}
-              className="w-full p-2 border border-gray-300 text-sm rounded bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className={getInputStyle("foto", "w-full p-2 border text-sm rounded bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100")}
             />
 
             <input type="hidden" {...register("foto")} />
@@ -244,39 +270,40 @@ export const EventoForm: React.FC<EventoFormProps> = ({
 
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium">
-            Fecha y Hora del Evento
+          <label className={getLabelStyle("fechaHoraEvento", ["fecha", "minutos", "horas", "política", "días", "anticipación"])}>
+            {hasError("fechaHoraEvento", ["fecha", "minutos", "horas", "política", "días", "anticipación"]) && <span>⚠️</span>} Fecha y Hora del Evento
           </label>
           <input
             type="datetime-local"
             {...register("fechaHoraEvento")}
             min={minDateTime}
             onKeyDown={(e) => e.preventDefault()}
-            className={`w-full p-2 border rounded ${errors.fechaHoraEvento || serverError ? 'border-red-500' : 'border-gray-300'}`}
+            className={getInputStyle("fechaHoraEvento", "w-full p-2 border rounded", ["fecha", "minutos", "horas", "política", "días", "anticipación"])}
           />
           {errors.fechaHoraEvento && <p className="text-red-500 text-xs mt-1">{errors.fechaHoraEvento.message}</p>}
-          {serverError && <p className="text-red-500 text-sm font-semibold mt-1 animate-pulse">⚠️ {serverError}</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block mb-2 text-sm font-medium">
-            Capacidad Máxima
+          <label className={getLabelStyle("capacidadMax", ["capacidad", "cupos"])}>
+            {hasError("capacidadMax", ["capacidad", "cupos"]) && <span>⚠️</span>} Capacidad Máxima
           </label>
           <input
             type="number"
             {...register("capacidadMax")}
-            className={`w-full p-2 border rounded ${errors.capacidadMax ? 'border-red-500' : 'border-gray-300'}`}
+            className={getInputStyle("capacidadMax", "w-full p-2 border rounded", ["capacidad", "cupos"])}
           />
           {errors.capacidadMax && <p className="text-red-500 text-xs mt-1">{errors.capacidadMax.message}</p>}
         </div>
 
         <div>
-          <label className="block mb-2 text-sm font-medium">Categoría</label>
+          <label className={getLabelStyle("idCategoria", ["categoría", "categoria"])}>
+            {hasError("idCategoria", ["categoría", "categoria"]) && <span>⚠️</span>} Categoría
+          </label>
           <select
             {...register("idCategoria")}
-            className={`w-full p-2.5 border rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 block ${errors.idCategoria ? 'border-red-500' : 'border-gray-300'}`}
+            className={getInputStyle("idCategoria", "w-full p-2.5 border rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 block", ["categoría", "categoria"])}
           >
             <option value="">Seleccione...</option>
             {categorias.map(cat => (
@@ -313,6 +340,14 @@ export const EventoForm: React.FC<EventoFormProps> = ({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {serverError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-sm font-bold flex items-center gap-2 animate-pulse">
+            ⚠️ {serverError}
+          </p>
         </div>
       )}
 
