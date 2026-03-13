@@ -34,7 +34,7 @@ export default function EventoEstadisticasTable({ eventos, totalEventos, categor
             <thead className="sticky top-0 z-10">
               <tr className="bg-blue-600 text-white">
                 <th className="px-4 py-3 text-left">Nombre</th>
-                <th className="px-4 py-3 text-center">Fecha de Finalización</th>
+                <th className="px-4 py-3 text-center">Fecha de Inicio</th>
                 <th className="px-4 py-3 text-center">Vendidos</th>
                 <th className="px-4 py-3 text-center">Reembolsados</th>
                 <th className="px-4 py-3 text-center">Recaudación</th>
