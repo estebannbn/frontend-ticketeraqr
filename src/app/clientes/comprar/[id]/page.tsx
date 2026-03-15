@@ -317,7 +317,7 @@ export default function PurchasePage() {
                                             {purchasing ? (
                                                 <div className="flex items-center justify-center py-6 bg-gray-50 rounded-2xl border border-gray-100">
                                                     <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
-                                                    <span className="text-gray-500 font-medium">Preparando pago seguro...</span>
+                                                    <span className="text-gray-500 font-medium">Comunicando con sistema de autorización de tarjeta...</span>
                                                 </div>
                                             ) : !isAuthenticated ? (
                                                 <div className="flex flex-col gap-3">
