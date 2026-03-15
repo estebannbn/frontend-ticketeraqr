@@ -31,7 +31,7 @@ export default function EstadisticasPage() {
       }
 
       const [statsRes, catsRes] = await Promise.all([
-        getEstadisticasEventos(idOrg),
+        getEstadisticasEventos(idOrg, fechaInicio, fechaFin),
         getCategorias()
       ]);
       const actualStats = (statsRes as any).data || statsRes;
