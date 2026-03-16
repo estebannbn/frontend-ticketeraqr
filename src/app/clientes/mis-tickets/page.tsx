@@ -234,16 +234,29 @@ export default function MisTicketsPage() {
                         {tickets.map((ticket) => (
                             <div
                                 key={ticket.nroTicket}
-                                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 group"
+                                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col"
                             >
-                                <div className="p-6">
-                                    {/* Header with Status and ID */}
-                                    <div className="flex justify-between items-start mb-4">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${getStatusColor(ticket.estado)}`}>
+                                {/* Event Image */}
+                                <div className="relative h-40 overflow-hidden">
+                                    <img
+                                        src={ticket.tipoTicket?.evento?.foto || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800"}
+                                        alt={ticket.tipoTicket?.evento?.nombre}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                    <div className="absolute top-3 left-3">
+                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm backdrop-blur-sm bg-white/90 ${getStatusColor(ticket.estado)}`}>
                                             {getStatusLabel(ticket.estado)}
                                         </span>
-                                        <span className="text-xs font-mono text-gray-400">#{ticket.nroTicket}</span>
                                     </div>
+                                    <div className="absolute bottom-2 right-2">
+                                        <span className="bg-black/50 text-white px-2 py-0.5 rounded text-[10px] font-mono">
+                                            #{ticket.nroTicket}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="p-5 flex-1 flex flex-col">
+                                    {/* Header removed from here to top image */}
 
                                     {/* Event Info */}
                                     <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
