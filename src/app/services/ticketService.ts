@@ -56,13 +56,18 @@ export async function getTicketsByCliente(id: number): Promise<Ticket[]> {
 
 // ✅ Consumir ticket por QR token
 export async function consumirTicket(tokenQr: string) {
-  const res = await fetch(`${API_URL}/api/tickets/consumir/${tokenQr}`, {
+  const res = await fetch(`${API_URL}/api/tickets/consumir/${encodeURIComponent(tokenQr)}`, {
     method: "PUT",
   });
 
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Error al consumir ticket");
+    try {
+      const error = await res.json();
+      throw new Error(error.message || "Error al consumir ticket");
+    } catch (e) {
+      // Si no es JSON (ej: un 404 HTML), devolver mensaje descriptivo
+      throw new Error("El código QR escaneado no pertenece a nuestro sistema o es inválido.");
+    }
   }
   const data = await res.json();
   return data.data;
@@ -70,11 +75,16 @@ export async function consumirTicket(tokenQr: string) {
 
 // ✅ Verificar ticket por QR token (sin consumir)
 export async function verificarTicket(tokenQr: string) {
-  const res = await fetch(`${API_URL}/api/tickets/token/${tokenQr}`);
+  const res = await fetch(`${API_URL}/api/tickets/token/${encodeURIComponent(tokenQr)}`);
 
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Error al verificar ticket");
+    try {
+      const error = await res.json();
+      throw new Error(error.message || "Error al verificar ticket");
+    } catch (e) {
+      // Si no es JSON (ej: un 404 HTML), devolver mensaje descriptivo
+      throw new Error("El código QR escaneado no pertenece a nuestro sistema o es inválido.");
+    }
   }
   const data = await res.json();
   return data.data;
