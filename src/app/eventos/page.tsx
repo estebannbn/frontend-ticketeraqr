@@ -74,6 +74,12 @@ export default function EventosPage() {
         return;
       }
 
+      if (!tipoTickets || tipoTickets.length === 0) {
+        alert("error de validación");
+        setLoading(false);
+        return;
+      }
+
       // Create a type-safe copy of the event data
       const eventoData: EventoFormData = {
         ...data,
