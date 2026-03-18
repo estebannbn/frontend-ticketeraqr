@@ -114,7 +114,7 @@ export default function MisTicketsPage() {
         setActionLoading(true);
         try {
             await transferTicket(selectedTicket.nroTicket, recipientEmail);
-            alert("Ticket transferido con éxito");
+            alert("Invitación de transferencia enviada. El destinatario debe aceptarla.");
             setIsTransferModalOpen(false);
             setRecipientEmail("");
             fetchTickets();
