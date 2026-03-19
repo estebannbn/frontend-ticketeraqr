@@ -6,13 +6,14 @@ import { OrganizacionFormData } from "@/types/organizacion";
 import { useForm, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { passwordMessage } from "@/utils/passwordValidator";
 
 const organizacionSchema = z.object({
   nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   ubicacion: z.string().min(5, "La ubicación debe ser más descriptiva"),
   cuit: z.string().regex(/^\d{11}$/, "CUIT debe tener 11 dígitos"),
   mail: z.string().email("Email inválido"),
-  contraseña: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  contraseña: z.string().min(6, passwordMessage),
   repetirContraseña: z.string(),
 }).superRefine((data, ctx) => {
   if (data.contraseña !== data.repetirContraseña) {

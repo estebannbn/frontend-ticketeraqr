@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { passwordMessage } from "@/utils/passwordValidator";
 import { useForm } from "react-hook-form";
 import { ClienteFormData } from "@/types/cliente";
 
@@ -113,7 +114,10 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
             <label className="block mb-2 text-sm font-medium">Contraseña</label>
             <input
               type="password"
-              {...register("contraseña")}
+              {...register("contraseña", {
+                required: "La contraseña es requerida",
+                minLength: { value: 6, message: passwordMessage },
+              })}
               className={`w-full p-2 border rounded ${errors.contraseña ? 'border-red-500' : ''}`}
             />
             {errors.contraseña && <p className="text-red-500 text-xs mt-1">{errors.contraseña.message}</p>}
@@ -122,7 +126,14 @@ export const ClienteForm: React.FC<ClienteFormProps> = ({
             <label className="block mb-2 text-sm font-medium">Repetir Contraseña</label>
             <input
               type="password"
-              {...register("repetirContraseña")}
+              {...register("repetirContraseña", {
+                required: "Debe repetir la contraseña",
+                validate: (val, formValues) => {
+                    if (val !== formValues.contraseña) {
+                        return "Las contraseñas no coinciden";
+                    }
+                }
+              })}
               className={`w-full p-2 border rounded ${errors.repetirContraseña ? 'border-red-500' : ''}`}
             />
             {errors.repetirContraseña && <p className="text-red-500 text-xs mt-1">{errors.repetirContraseña.message}</p>}
