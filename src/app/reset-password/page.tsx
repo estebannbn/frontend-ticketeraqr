@@ -23,12 +23,6 @@ export default function ResetPasswordPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Validaciones del esquema de backend
-        if (password.length < 6) {
-            return setMessage({ text: "La nueva contraseña debe tener al menos 6 caracteres", type: "error" });
-        }
-
         if (password !== confirmPassword) {
             return setMessage({ text: "Las contraseñas no coinciden", type: "error" });
         }
