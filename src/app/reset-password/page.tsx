@@ -5,6 +5,7 @@ import { Lock, ArrowLeft, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { resetPassword } from "../services/usuarioService";
+import { validatePassword } from "@/utils/passwordValidator";
 
 export default function ResetPasswordPage() {
     const [password, setPassword] = useState("");
@@ -23,6 +24,12 @@ export default function ResetPasswordPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            return setMessage({ text: passwordError, type: "error" });
+        }
+
         if (password !== confirmPassword) {
             return setMessage({ text: "Las contraseñas no coinciden", type: "error" });
         }
