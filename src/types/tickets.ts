@@ -25,6 +25,7 @@ export interface Ticket {
       nombre: string;
       fechaHoraEvento: string;
       idOrganizacion: number;
+      foto?: string;
     };
   };
 }

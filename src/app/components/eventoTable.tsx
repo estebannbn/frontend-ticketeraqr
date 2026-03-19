@@ -141,99 +141,123 @@ export const EventoTable: React.FC<EventoTableProps> = ({
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {eventosPaginados.map((evento) => (
-              <tr key={evento.idEvento}>
-                <td className="px-4 py-3 font-semibold">{evento.nombre}</td>
+            {eventosPaginados.length > 0 ? (
+              eventosPaginados.map((evento) => (
+                <tr key={evento.idEvento}>
+                  <td className="px-4 py-3 font-semibold">{evento.nombre}</td>
 
-                <td className="px-4 py-3">
-                  {evento.foto ? (
-                    <img
-                      src={evento.foto}
-                      alt={evento.nombre}
-                      className="h-12 w-20 object-cover rounded"
-                    />
-                  ) : (
-                    <div className="h-12 w-20 bg-gray-100 flex items-center justify-center text-xs text-gray-400 rounded">
-                      Sin foto
-                    </div>
-                  )}
-                </td>
+                  <td className="px-4 py-3">
+                    {evento.foto ? (
+                      <img
+                        src={evento.foto}
+                        alt={evento.nombre}
+                        className="h-12 w-20 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="h-12 w-20 bg-gray-100 flex items-center justify-center text-xs text-gray-400 rounded">
+                        Sin foto
+                      </div>
+                    )}
+                  </td>
 
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-bold ${evento.estado === "CANCELADO"
-                      ? "bg-red-100 text-red-700"
-                      : evento.estado === "FINALIZADO"
-                        ? "bg-gray-100 text-gray-700"
-                        : "bg-green-100 text-green-700"
-                      }`}
-                  >
-                    {evento.estado || "ACTIVO"}
-                  </span>
-                </td>
-
-                <td className="px-4 py-3">{evento.descripcion || "—"}</td>
-
-                <td className="px-4 py-3">
-                  {evento.ubicacion || "—"}
-                </td>
-
-                <td className="px-4 py-3">
-                  {new Date(evento.fechaHoraEvento).toLocaleString()}
-                </td>
-
-                <td className="px-4 py-3">{evento.capacidadMax}</td>
-
-                <td className="px-4 py-3">
-                  {categorias.find(
-                    (c) => c.idCategoria === evento.idCategoria
-                  )?.nombreCategoria || evento.idCategoria}
-                </td>
-
-                <td className="px-4 py-3">
-                  <ul className="list-disc pl-4">
-                    {(evento.tipoTickets || []).map((ticket) => (
-                      <li key={ticket.idTipoTicket || ticket.tipo}>
-                        {ticket.tipo} (${ticket.precio}) - {ticket.acceso}
-                      </li>
-                    ))}
-                  </ul>
-                </td>
-
-                <td className="px-4 py-3 space-x-2 whitespace-nowrap">
-                  {evento.estado === "ACTIVO" || !evento.estado ? (
-                    <>
-                      <button
-                        onClick={() => openDateModal(evento)}
-                        className="text-blue-600 hover:text-blue-800 mr-2 font-medium"
-                      >
-                        Cambiar fecha
-                      </button>
-
-                      <button
-                        onClick={() => onCancel(evento.idEvento)}
-                        className="text-orange-600 hover:text-orange-800 mr-2 font-medium"
-                      >
-                        Cancelar
-                      </button>
-                    </>
-                  ) : evento.estado === "CANCELADO" ? (
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => onDelete(evento.idEvento)}
-                        className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-colors"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="text-gray-500 italic text-sm">
-                      Sin acciones
+                  <td className="px-4 py-3">
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-bold ${evento.estado === "CANCELADO"
+                        ? "bg-red-100 text-red-700"
+                        : evento.estado === "FINALIZADO"
+                          ? "bg-gray-100 text-gray-700"
+                          : "bg-green-100 text-green-700"
+                        }`}
+                    >
+                      {evento.estado || "ACTIVO"}
                     </span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+
+                  <td className="px-4 py-3">{evento.descripcion || "—"}</td>
+
+                  <td className="px-4 py-3">
+                    {evento.ubicacion || "—"}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    {new Date(evento.fechaHoraEvento).toLocaleString()}
+                  </td>
+
+                  <td className="px-4 py-3">{evento.capacidadMax}</td>
+
+                  <td className="px-4 py-3">
+                    {categorias.find(
+                      (c) => c.idCategoria === evento.idCategoria
+                    )?.nombreCategoria || evento.idCategoria}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <ul className="list-disc pl-4">
+                      {(evento.tipoTickets || []).map((ticket) => (
+                        <li key={ticket.idTipoTicket || ticket.tipo}>
+                          {ticket.tipo} (${ticket.precio}) - {ticket.acceso}
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+
+                  <td className="px-4 py-3 space-x-2 whitespace-nowrap">
+                    {evento.estado === "ACTIVO" || !evento.estado ? (
+                      <>
+                        <button
+                          onClick={() => openDateModal(evento)}
+                          className="text-blue-600 hover:text-blue-800 mr-2 font-medium"
+                        >
+                          Cambiar fecha
+                        </button>
+
+                        <button
+                          onClick={() => onCancel(evento.idEvento)}
+                          className="text-orange-600 hover:text-orange-800 mr-2 font-medium"
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    ) : evento.estado === "CANCELADO" ? (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => onDelete(evento.idEvento)}
+                          className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 italic text-sm">
+                        Sin acciones
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              !loading && (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <svg className="w-12 h-12 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-lg font-medium">
+                        {eventos.length === 0 
+                          ? "Aún no has creado ningún evento" 
+                          : "No hay eventos que coincidan con los filtros aplicados"}
+                      </p>
+                      <p className="text-sm">
+                        {eventos.length === 0 
+                          ? "¡Comienza creando tu primer evento usando el formulario!" 
+                          : "Prueba ajustando el nombre o la categoría de búsqueda"}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
 

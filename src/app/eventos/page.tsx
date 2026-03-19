@@ -28,6 +28,7 @@ export default function EventosPage() {
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [organizacionId, setOrganizacionId] = useState<number | null>(null);
   const [eventFormError, setEventFormError] = useState<string | null>(null);
+  const [dateChangeSuccess, setDateChangeSuccess] = useState(false);
 
   const { user } = useAuth(); // Assume we need to import useAuth and destructure user
 
@@ -69,6 +70,12 @@ export default function EventosPage() {
 
       if (totalTicketsCapacity > parsedCapacidadMax) {
         setEventFormError("La suma de la capacidad de los tipos de tickets no puede exceder la capacidad máxima del evento.");
+        setLoading(false);
+        return;
+      }
+
+      if (!tipoTickets || tipoTickets.length === 0) {
+        alert("error de validación");
         setLoading(false);
         return;
       }
@@ -130,6 +137,8 @@ export default function EventosPage() {
       const res = await cambiarFechaEvento(id, nuevaFecha);
       if (res.success) {
         await loadEventos();
+        setDateChangeSuccess(true);
+        setTimeout(() => setDateChangeSuccess(false), 5000);
       } else {
         alert(res.error);
       }
@@ -198,6 +207,14 @@ export default function EventosPage() {
             >
               Cerrar aviso
             </button>
+          </div>
+        )}
+
+        {dateChangeSuccess && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm animate-in fade-in duration-500">
+            <h3 className="text-blue-800 font-bold flex items-center gap-2">
+              ✓ ¡Fecha del evento actualizada con éxito!
+            </h3>
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
