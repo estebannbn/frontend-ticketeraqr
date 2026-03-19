@@ -8,6 +8,7 @@ import { updateOrganizacion, getOrganizacionByUsuarioId } from "@/app/services/o
 import { updateUsuario } from "@/app/services/usuarioService";
 import { ClienteFormData } from "@/types/cliente";
 import { OrganizacionFormData } from "@/types/organizacion";
+import { validatePassword } from "@/utils/passwordValidator";
 
 type ProfileData =
     | (ClienteFormData & { rol: "CLIENTE" })
@@ -133,6 +134,13 @@ export default function PerfilPage() {
                 await updateOrganizacion(profile.idOrganizacion, profile);
             } else if (profile.rol === "ADMIN" && user?.idUsuario) {
                 if (profile.contraseña) {
+                    const passwordError = validatePassword(profile.contraseña);
+                    if (passwordError) {
+                        setFieldErrors({ contraseña: passwordError });
+                        setMessage({ text: "Corrija los errores marcados", type: "error" });
+                        setSaving(false);
+                        return;
+                    }
                     await updateUsuario(Number(user.idUsuario), { contraseña: profile.contraseña });
                 }
             }
