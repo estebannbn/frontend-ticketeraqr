@@ -107,14 +107,38 @@ export default function VentasReportePage() {
 
                 {/* Filtros */}
                 <form onSubmit={handleApplyFilters} className="bg-white p-6 rounded-xl shadow-sm mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
-                        <input type="date" name="fechaInicio" value={filters.fechaInicio} max={filters.fechaFin} onChange={handleFilterChange} onKeyDown={(e) => e.preventDefault()} className="w-full border rounded-lg p-2 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
-                        <input type="date" name="fechaFin" value={filters.fechaFin} min={filters.fechaInicio} onChange={handleFilterChange} onKeyDown={(e) => e.preventDefault()} className="w-full border rounded-lg p-2 text-sm" />
-                    </div>
+                    {(() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        return (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                                    <input 
+                                        type="date" 
+                                        name="fechaInicio" 
+                                        value={filters.fechaInicio} 
+                                        max={filters.fechaFin || today} 
+                                        onChange={handleFilterChange} 
+                                        onKeyDown={(e) => e.preventDefault()} 
+                                        className="w-full border rounded-lg p-2 text-sm" 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+                                    <input 
+                                        type="date" 
+                                        name="fechaFin" 
+                                        value={filters.fechaFin} 
+                                        min={filters.fechaInicio} 
+                                        max={today} 
+                                        onChange={handleFilterChange} 
+                                        onKeyDown={(e) => e.preventDefault()} 
+                                        className="w-full border rounded-lg p-2 text-sm" 
+                                    />
+                                </div>
+                            </>
+                        );
+                    })()}
 
                     {/* Filtro Categoría */}
                     <div>
