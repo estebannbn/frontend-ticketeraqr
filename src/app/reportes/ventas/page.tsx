@@ -78,11 +78,13 @@ export default function VentasReportePage() {
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-
-        // Si cambia el evento, limpiar tipo ticket (opcional, si implemento tipos específicos por evento)
-        if (name === "idEvento") {
+        
+        if (name === "idCategoria") {
+            setFilters(prev => ({ ...prev, idCategoria: value, idEvento: "", idTipoTicket: "" }));
+        } else if (name === "idEvento") {
             setFilters(prev => ({ ...prev, idEvento: value, idTipoTicket: "" }));
+        } else {
+            setFilters(prev => ({ ...prev, [name]: value }));
         }
     };
 
