@@ -61,7 +61,36 @@ export default function VentasReportePage() {
 
             if (res.success) {
                 console.log("Report data received:", res.data);
-                setData(res.data);
+                
+                // Consolidación definitiva y Relleno de Horas (00:00 - 23:00)
+                const aggregatedMap = new Map<string, ReporteHora>();
+                
+                // Inicializar las 24 horas del día con ceros
+                for (let i = 0; i < 24; i++) {
+                    const h = `${i.toString().padStart(2, '0')}:00`;
+                    aggregatedMap.set(h, { hora: h, cantidad: 0, recaudacion: 0 });
+                }
+                
+                res.data.forEach((d: ReporteHora) => {
+                    const h = (d.hora || "").trim();
+                    if (h && aggregatedMap.has(h)) {
+                        const existing = aggregatedMap.get(h)!;
+                        existing.cantidad += (Number(d.cantidad) || 0);
+                        existing.recaudacion += (Number(d.recaudacion) || 0);
+                    } else if (h) {
+                        // Por si acaso viene una hora en un formato distinto a HH:00
+                        aggregatedMap.set(h, { 
+                            ...d, 
+                            hora: h, 
+                            cantidad: Number(d.cantidad) || 0,
+                            recaudacion: Number(d.recaudacion) || 0 
+                        });
+                    }
+                });
+
+                // Ordenar cronológicamente (ya vienen en orden por el Map + Sort si fuera necesario)
+                const consolidated = Array.from(aggregatedMap.values()).sort((a, b) => a.hora.localeCompare(b.hora));
+                setData(consolidated);
             } else {
                 console.error("Error fetching report:", res.error);
             }
@@ -245,7 +274,7 @@ export default function VentasReportePage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {data.map((row) => (
+                                        {data.filter(row => row.cantidad > 0).map((row) => (
                                             <tr key={row.hora} className="hover:bg-gray-50">
                                                 <td className="p-4 font-medium">{row.hora}</td>
                                                 <td className="p-4">{row.cantidad}</td>

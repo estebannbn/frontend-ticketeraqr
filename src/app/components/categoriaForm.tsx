@@ -28,6 +28,38 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
   loading,
 }) => {
   const [generalError, setGeneralError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    setError,
+    clearErrors,
+    reset,
+    formState: { errors },
+  } = useForm<Categoria>({
+    resolver: zodResolver(categoriaSchema),
+    defaultValues: {
+      idCategoria: 0,
+      nombreCategoria: "",
+    },
+  });
+
+  // Auto-dismiss messages after 5 seconds
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (generalError || successMessage || Object.keys(errors).length > 0) {
+      timer = setTimeout(() => {
+        setGeneralError("");
+        setSuccessMessage("");
+        clearErrors();
+      }, 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [generalError, successMessage, errors, clearErrors]);
 
   // Helper para detectar si un campo tiene error (local o del servidor)
   const hasError = (fieldName: string, keywords: string[] = []): boolean => {
@@ -46,25 +78,14 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     return `${baseClass} transition-all ${hasError(fieldName, keywords) ? 'border-red-500 ring-1 ring-red-100' : 'border-gray-300 focus:border-blue-500'}`;
   };
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    setError,
-    reset,
-    formState: { errors },
-  } = useForm<Categoria>({
-    resolver: zodResolver(categoriaSchema),
-    defaultValues: {
-      idCategoria: 0,
-      nombreCategoria: "",
-    },
-  });
 
   const onFormSubmit = async (data: Categoria) => {
     try {
       setGeneralError("");
+      setSuccessMessage("");
       await onSubmit(data);
+      setSuccessMessage("¡Categoría creada con éxito!");
+      reset(); // Reseteamos el formulario al tener éxito
     } catch (err: any) {
       console.error("Error al crear categoría:", err);
       let parsedError: any = null;
@@ -97,7 +118,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
         setGeneralError(errorMsg);
       }
     } finally {
-      setValue("nombreCategoria", "");
+      // No reseteamos automáticamente aquí para que el mensaje de error no desaparezca al instante si se recarga algo
     }
   };
 
@@ -108,8 +129,14 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
     >
 
       {generalError && (
-        <div className="p-2 text-sm text-red-700 bg-red-100 border border-red-300 rounded">
-          {generalError}
+        <div className="p-2 text-sm text-red-700 bg-red-100 border border-red-300 rounded flex items-center gap-2">
+          <span>❌</span> {generalError}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="p-2 text-sm text-green-700 bg-green-100 border border-green-300 rounded flex items-center gap-2 animate-fade-in">
+          <span>✅</span> {successMessage}
         </div>
       )}
 
