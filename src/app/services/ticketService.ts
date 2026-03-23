@@ -61,13 +61,15 @@ export async function consumirTicket(tokenQr: string) {
   });
 
   if (!res.ok) {
+    let errorMsg = "Error al consumir ticket";
     try {
       const error = await res.json();
-      throw new Error(error.message || "Error al consumir ticket");
+      if (error.message) errorMsg = error.message;
     } catch (e) {
       // Si no es JSON (ej: un 404 HTML), devolver mensaje descriptivo
-      throw new Error("El código QR escaneado no pertenece a nuestro sistema o es inválido.");
+      errorMsg = "El código QR escaneado no pertenece a nuestro sistema o es inválido.";
     }
+    throw new Error(errorMsg);
   }
   const data = await res.json();
   return data.data;
@@ -78,13 +80,15 @@ export async function verificarTicket(tokenQr: string) {
   const res = await fetch(`${API_URL}/api/tickets/token/${encodeURIComponent(tokenQr)}`);
 
   if (!res.ok) {
+    let errorMsg = "Error al verificar ticket";
     try {
       const error = await res.json();
-      throw new Error(error.message || "Error al verificar ticket");
+      if (error.message) errorMsg = error.message;
     } catch (e) {
       // Si no es JSON (ej: un 404 HTML), devolver mensaje descriptivo
-      throw new Error("El código QR escaneado no pertenece a nuestro sistema o es inválido.");
+      errorMsg = "El código QR escaneado no pertenece a nuestro sistema o es inválido.";
     }
+    throw new Error(errorMsg);
   }
   const data = await res.json();
   return data.data;
