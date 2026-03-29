@@ -1,5 +1,5 @@
 import { Evento } from "@/types/evento";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Categoria } from "@/types/categoria";
 
 interface EventoTableProps {
@@ -69,25 +69,34 @@ export const EventoTable: React.FC<EventoTableProps> = ({
   const argentinaTime = new Date(now.getTime() - 3 * 3600000);
   const minDateTime = argentinaTime.toISOString().slice(0, 16);
 
-  // filtro eventos
-  const eventosFiltrados = eventos.filter((evento) => {
-    const coincideNombre = evento.nombre
-      .toLowerCase()
-      .includes(nombreFiltro.toLowerCase());
+  // filtro eventos (optimizados con useMemo)
+  const { eventosPaginados, totalItems, totalPages, startIndex, endIndex } = useMemo(() => {
+    const filtrados = eventos.filter((evento) => {
+      const coincideNombre = evento.nombre
+        .toLowerCase()
+        .includes(nombreFiltro.toLowerCase());
 
-    const coincideCategoria =
-      categoriaFiltro === "" ||
-      evento.idCategoria === Number(categoriaFiltro);
+      const coincideCategoria =
+        categoriaFiltro === "" ||
+        evento.idCategoria === Number(categoriaFiltro);
 
-    return coincideNombre && coincideCategoria;
-  });
+      return coincideNombre && coincideCategoria;
+    });
 
-  // Cálculo de paginación
-  const totalItems = eventosFiltrados.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const eventosPaginados = eventosFiltrados.slice(startIndex, endIndex);
+    const total = filtrados.length;
+    const paginas = Math.ceil(total / itemsPerPage);
+    const inicio = (currentPage - 1) * itemsPerPage;
+    const fin = inicio + itemsPerPage;
+    const paginados = filtrados.slice(inicio, fin);
+
+    return {
+      eventosPaginados: paginados,
+      totalItems: total,
+      totalPages: Math.max(1, paginas),
+      startIndex: inicio,
+      endIndex: fin,
+    };
+  }, [eventos, nombreFiltro, categoriaFiltro, currentPage]);
 
   return (
     <div>
