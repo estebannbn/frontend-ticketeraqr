@@ -11,6 +11,7 @@ import { getOrganizacionByUsuarioId } from "@/app/services/organizacionService";
 import { useAuth } from "@/context/AuthContext";
 import { Categoria } from "@/types/categoria";
 import { Evento } from "@/types/evento";
+import dayjs from "dayjs";
 
 export default function VentasReportePage() {
     const { user } = useAuth();
@@ -131,10 +132,23 @@ export default function VentasReportePage() {
     const selectedEvento = eventos.find(e => e.idEvento === Number(filters.idEvento));
     const tiposTicket = selectedEvento?.tipoTickets || [];
 
+    // Lógica para detectar nombres duplicados en los eventos filtrados
+    const eventNames = filteredEventos.map(e => e.nombre.toLowerCase());
+    const duplicateNames = new Set(
+        eventNames.filter((name, index) => eventNames.indexOf(name) !== index)
+    );
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50 uppercase">
             <main className="container mx-auto px-4 py-8 flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Reporte de Ventas por Hora</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-8">
+                    Reporte de Ventas por Hora
+                    {selectedEvento && (
+                        <span className="block text-xl text-indigo-600 mt-2">
+                            - {selectedEvento.nombre} ({dayjs(selectedEvento.fechaHoraEvento).format('DD/MM/YYYY HH:mm')})
+                        </span>
+                    )}
+                </h1>
 
                 {/* Filtros */}
                 <form onSubmit={handleApplyFilters} className="bg-white p-6 rounded-xl shadow-sm mb-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
@@ -187,9 +201,14 @@ export default function VentasReportePage() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
                         <select name="idEvento" onChange={handleFilterChange} className="w-full border rounded-lg p-2 text-sm" value={filters.idEvento}>
                             <option value="">Todos</option>
-                            {filteredEventos.map(e => (
-                                <option key={e.idEvento} value={e.idEvento}>{e.nombre}</option>
-                            ))}
+                            {filteredEventos.map(e => {
+                                const isDuplicate = duplicateNames.has(e.nombre.toLowerCase());
+                                return (
+                                    <option key={e.idEvento} value={e.idEvento}>
+                                        {e.nombre} {isDuplicate ? `(${dayjs(e.fechaHoraEvento).format('DD/MM/YYYY HH:mm')})` : ""}
+                                    </option>
+                                );
+                            })}
                         </select>
                     </div>
 
