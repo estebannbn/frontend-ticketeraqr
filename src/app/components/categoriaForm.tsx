@@ -28,7 +28,6 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
   loading,
 }) => {
   const [generalError, setGeneralError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
 
 
@@ -51,15 +50,14 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
   // Auto-dismiss messages after 5 seconds
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (generalError || successMessage || Object.keys(errors).length > 0) {
+    if (generalError || Object.keys(errors).length > 0) {
       timer = setTimeout(() => {
         setGeneralError("");
-        setSuccessMessage("");
         clearErrors();
       }, 5000);
     }
     return () => clearTimeout(timer);
-  }, [generalError, successMessage, errors, clearErrors]);
+  }, [generalError, errors, clearErrors]);
 
   // Helper para detectar si un campo tiene error (local o del servidor)
   const hasError = (fieldName: string, keywords: string[] = []): boolean => {
@@ -82,9 +80,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
   const onFormSubmit = async (data: Categoria) => {
     try {
       setGeneralError("");
-      setSuccessMessage("");
       await onSubmit(data);
-      setSuccessMessage("¡Categoría creada con éxito!");
       reset(); // Reseteamos el formulario al tener éxito
     } catch (err: any) {
       console.error("Error al crear categoría:", err);
@@ -134,11 +130,7 @@ export const CategoriaForm: React.FC<CategoriaFormProps> = ({
         </div>
       )}
 
-      {successMessage && (
-        <div className="p-2 text-sm text-green-700 bg-green-100 border border-green-300 rounded flex items-center gap-2 animate-fade-in">
-          <span>✅</span> {successMessage}
-        </div>
-      )}
+
 
       <div>
         <label htmlFor="nombreCategoria" className={getLabelStyle("nombreCategoria", ["categoría", "nombre"])}>
