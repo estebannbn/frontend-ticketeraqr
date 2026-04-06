@@ -11,7 +11,7 @@ export interface ApiResponse<T> {
 const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 
 export type ServiceResult<T> = 
-    | { success: true; data: T }
+    | { success: true; data: T; message?: string }
     | { success: false; error: string };
 
 export async function getCategorias(): Promise<ServiceResult<Categoria[]>> {
@@ -42,7 +42,7 @@ export async function createCategoria(
       return { success: false, error: error.message || "Error al crear categoría" };
     }
     const json = (await res.json()) as ApiResponse<Categoria>;
-    return { success: true, data: json.data };
+    return { success: true, data: json.data, message: json.message };
   } catch (error) {
     return { success: false, error: (error as Error).message };
   }

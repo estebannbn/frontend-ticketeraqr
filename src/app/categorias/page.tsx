@@ -35,6 +35,8 @@ function AdminCategoriasView() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null);
 
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   useEffect(() => {
     loadCategorias();
   }, []);
@@ -54,9 +56,12 @@ function AdminCategoriasView() {
 
   const handleFormSubmit = async (data: CategoriaFormData) => {
     setLoading(true);
+    setSuccessMessage(null);
     try {
       const res = await createCategoria(data);
       if (res.success) {
+        setSuccessMessage(res.message || "Operación realizada con éxito");
+        setTimeout(() => setSuccessMessage(null), 3000);
         await loadCategorias();
       } else {
         // Lanzamos el error para que CategoriaForm lo capture en su propio try-catch
@@ -95,6 +100,16 @@ function AdminCategoriasView() {
     <RoleGuard allowedRoles={["ADMIN"]}>
       <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">Gestión de Categorías</h1>
+
+        {successMessage && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2 animate-in fade-in duration-300">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="font-medium">{successMessage}</span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
           <div className="col-span-12 md:col-span-4">
             <CategoriaForm
