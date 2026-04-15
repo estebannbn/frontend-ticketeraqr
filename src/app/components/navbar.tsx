@@ -194,8 +194,8 @@ export default function Navbar() {
 
           {/* MOBILE TOGGLE BUTTON */}
           <div className="md:hidden flex items-center">
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="text-gray-600 hover:text-black p-2 bg-gray-50 rounded-md focus:outline-none"
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -210,9 +210,9 @@ export default function Navbar() {
           <div className="flex flex-col gap-2">
             {renderLinks(true)}
           </div>
-          
+
           <hr className="border-gray-100 my-2" />
-          
+
           <div className="flex flex-col gap-3">
             {user ? (
               <>

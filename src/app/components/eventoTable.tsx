@@ -9,6 +9,7 @@ interface EventoTableProps {
   onChangeDate: (id: number, nuevaFecha: string) => Promise<void>;
   onDelete: (id: number) => void;
   onCancel: (id: number) => void;
+  userRol?: string;
 }
 
 export const EventoTable: React.FC<EventoTableProps> = ({
@@ -18,6 +19,7 @@ export const EventoTable: React.FC<EventoTableProps> = ({
   onChangeDate,
   onDelete,
   onCancel,
+  userRol,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
@@ -145,7 +147,9 @@ export const EventoTable: React.FC<EventoTableProps> = ({
               <th className="px-4 py-3 text-left text-sm font-medium">Capacidad</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Categoría</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Tickets</th>
-              <th className="px-4 py-3 text-left text-sm font-medium">Acciones</th>
+              {userRol !== "ADMIN" && (
+                <th className="px-4 py-3 text-left text-sm font-medium">Acciones</th>
+              )}
             </tr>
           </thead>
 
@@ -210,38 +214,40 @@ export const EventoTable: React.FC<EventoTableProps> = ({
                     </ul>
                   </td>
 
-                  <td className="px-4 py-3 space-x-2 whitespace-nowrap">
-                    {evento.estado === "ACTIVO" || !evento.estado ? (
-                      <>
-                        <button
-                          onClick={() => openDateModal(evento)}
-                          className="text-blue-600 hover:text-blue-800 mr-2 font-medium"
-                        >
-                          Cambiar fecha
-                        </button>
+                  {userRol !== "ADMIN" && (
+                    <td className="px-4 py-3 space-x-2 whitespace-nowrap">
+                      {evento.estado === "ACTIVO" || !evento.estado ? (
+                        <>
+                          <button
+                            onClick={() => openDateModal(evento)}
+                            className="text-blue-600 hover:text-blue-800 mr-2 font-medium"
+                          >
+                            Cambiar fecha
+                          </button>
 
-                        <button
-                          onClick={() => onCancel(evento.idEvento)}
-                          className="text-orange-600 hover:text-orange-800 mr-2 font-medium"
-                        >
-                          Cancelar
-                        </button>
-                      </>
-                    ) : evento.estado === "CANCELADO" ? (
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => onDelete(evento.idEvento)}
-                          className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-colors"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 italic text-sm">
-                        Sin acciones
-                      </span>
-                    )}
-                  </td>
+                          <button
+                            onClick={() => onCancel(evento.idEvento)}
+                            className="text-orange-600 hover:text-orange-800 mr-2 font-medium"
+                          >
+                            Cancelar
+                          </button>
+                        </>
+                      ) : evento.estado === "CANCELADO" ? (
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => onDelete(evento.idEvento)}
+                            className="text-red-500 hover:text-red-700 font-medium text-sm border border-red-200 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 italic text-sm">
+                          Sin acciones
+                        </span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (

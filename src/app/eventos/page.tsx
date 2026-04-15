@@ -218,47 +218,49 @@ export default function EventosPage() {
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="col-span-12 md:col-span-4">
-            <EventoForm
-              isEditing={false}
-              onSubmit={handleFormSubmit}
-              loading={loading}
-              tipoTickets={tipoTickets}
-              onRemoveTicket={handleRemoveTicket}
-              serverError={eventFormError}
-            />
+          {user?.rol === "ORGANIZACION" && (
+            <div className="col-span-12 md:col-span-4">
+              <EventoForm
+                isEditing={false}
+                onSubmit={handleFormSubmit}
+                loading={loading}
+                tipoTickets={tipoTickets}
+                onRemoveTicket={handleRemoveTicket}
+                serverError={eventFormError}
+              />
 
-            <button
-              onClick={() => setShowTicketModal(true)}
-              className="mt-4 w-full px-4 py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-colors font-medium flex items-center justify-center gap-2"
-            >
-              + Agregar Tipo de Ticket
-            </button>
+              <button
+                onClick={() => setShowTicketModal(true)}
+                className="mt-4 w-full px-4 py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                + Agregar Tipo de Ticket
+              </button>
 
-            {showTicketModal && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-                  <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-                    <h3 className="font-bold text-gray-800">Cargar Nuevo Ticket</h3>
-                    <button
-                      onClick={() => setShowTicketModal(false)}
-                      className="text-gray-500 hover:text-gray-700 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <TipoTicketForm
-                      isEditing={false}
-                      onSubmit={handleTipoTicketSubmit}
-                      loading={loading}
-                    />
+              {showTicketModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <div className="p-4 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                      <h3 className="font-bold text-gray-800">Cargar Nuevo Ticket</h3>
+                      <button
+                        onClick={() => setShowTicketModal(false)}
+                        className="text-gray-500 hover:text-gray-700 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="p-4">
+                      <TipoTicketForm
+                        isEditing={false}
+                        onSubmit={handleTipoTicketSubmit}
+                        loading={loading}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-          <div className="col-span-12 md:col-span-8">
+              )}
+            </div>
+          )}
+          <div className={`col-span-12 ${user?.rol === "ADMIN" ? "md:col-span-12" : "md:col-span-8"}`}>
             <EventoTable
               eventos={eventos}
               categorias={categorias}
@@ -266,6 +268,7 @@ export default function EventosPage() {
               onChangeDate={handleCambiarFecha}
               onDelete={handleDelete}
               onCancel={handleCancelEvento}
+              userRol={user?.rol}
             />
           </div>
         </div>
