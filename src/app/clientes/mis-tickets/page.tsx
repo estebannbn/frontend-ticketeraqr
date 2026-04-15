@@ -9,6 +9,7 @@ import QrModal from "@/app/components/ui/QrModal";
 import { useAuth } from "@/context/AuthContext";
 import { transferTicket, refundTicket, acceptTransfer, rejectTransfer } from "@/app/services/ticketService";
 import { getClienteByUsuarioId } from "@/app/services/clientService";
+import RoleGuard from "@/app/components/RoleGuard";
 
 export default function MisTicketsPage() {
     const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -30,13 +31,8 @@ export default function MisTicketsPage() {
             // Wait for auth to be ready
             if (authLoading) return;
 
-            if (!user || user.rol !== 'CLIENTE') {
-                router.push("/");
-                return;
-            }
-
             try {
-                const idUsuario = user.idUsuario;
+                const idUsuario = user?.idUsuario;
                 if (idUsuario) {
                     const cliente = await getClienteByUsuarioId(Number(idUsuario));
                     if (cliente && cliente.idCliente) {
@@ -202,241 +198,243 @@ export default function MisTicketsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                            <TicketIcon className="w-8 h-8 text-indigo-600" />
-                            Mis Tickets
-                        </h1>
-                        <p className="mt-2 text-gray-600">Gestina y visualiza tus entradas a eventos</p>
-                    </div>
-                </div>
-
-                {error && (
-                    <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3 text-red-700">
-                        <AlertCircle className="w-5 h-5" />
-                        <p>{error}</p>
-                    </div>
-                )}
-
-                {tickets.length === 0 && !error ? (
-                    <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
-                        <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <TicketIcon className="w-10 h-10 text-gray-400" />
+        <RoleGuard allowedRoles={["CLIENTE"]}>
+            <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                                <TicketIcon className="w-8 h-8 text-indigo-600" />
+                                Mis Tickets
+                            </h1>
+                            <p className="mt-2 text-gray-600">Gestina y visualiza tus entradas a eventos</p>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900">No tienes tickets aún</h3>
-                        <p className="text-gray-500 mt-2">¡Explora los eventos disponibles y consigue tu primera entrada!</p>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {tickets.map((ticket) => (
-                            <div
-                                key={ticket.nroTicket}
-                                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col"
-                            >
-                                {/* Event Image */}
-                                <div className="relative h-40 overflow-hidden">
-                                    <img
-                                        src={ticket.tipoTicket?.evento?.foto || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800"}
-                                        alt={ticket.tipoTicket?.evento?.nombre}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                    <div className="absolute top-3 left-3">
-                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm backdrop-blur-sm bg-white/90 ${getStatusColor(ticket.estado)}`}>
-                                            {getStatusLabel(ticket.estado)}
-                                        </span>
-                                    </div>
-                                    <div className="absolute bottom-2 right-2">
-                                        <span className="bg-black/50 text-white px-2 py-0.5 rounded text-[10px] font-mono">
-                                            #{ticket.nroTicket}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                <div className="p-5 flex-1 flex flex-col">
-                                    {/* Header removed from here to top image */}
+                    {error && (
+                        <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3 text-red-700">
+                            <AlertCircle className="w-5 h-5" />
+                            <p>{error}</p>
+                        </div>
+                    )}
 
-                                    {/* Event Info */}
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
-                                        {ticket.tipoTicket?.evento?.nombre || "Evento sin nombre"}
-                                    </h3>
-
-                                    <div className="space-y-3 mt-4">
-                                        <div className="flex items-center text-gray-600">
-                                            <Calendar className="w-4 h-4 mr-3 text-gray-400" />
-                                            <span className="text-sm">
-                                                {ticket.tipoTicket?.evento?.fechaHoraEvento
-                                                    ? new Date(ticket.tipoTicket.evento.fechaHoraEvento).toLocaleDateString('es-ES', {
-                                                        weekday: 'long',
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })
-                                                    : "Fecha por confirmar"}
+                    {tickets.length === 0 && !error ? (
+                        <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+                            <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <TicketIcon className="w-10 h-10 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900">No tienes tickets aún</h3>
+                            <p className="text-gray-500 mt-2">¡Explora los eventos disponibles y consigue tu primera entrada!</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {tickets.map((ticket) => (
+                                <div
+                                    key={ticket.nroTicket}
+                                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col"
+                                >
+                                    {/* Event Image */}
+                                    <div className="relative h-40 overflow-hidden">
+                                        <img
+                                            src={ticket.tipoTicket?.evento?.foto || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800"}
+                                            alt={ticket.tipoTicket?.evento?.nombre}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        <div className="absolute top-3 left-3">
+                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border shadow-sm backdrop-blur-sm bg-white/90 ${getStatusColor(ticket.estado)}`}>
+                                                {getStatusLabel(ticket.estado)}
                                             </span>
                                         </div>
-
-                                        <div className="flex items-center text-gray-600">
-                                            <Tag className="w-4 h-4 mr-3 text-gray-400" />
-                                            <span className="text-sm">Acceso: {ticket.tipoTicket?.acceso || "General"} {ticket.tipoTicket?.sector && `- Sector: ${ticket.tipoTicket.sector}`}</span>
+                                        <div className="absolute bottom-2 right-2">
+                                            <span className="bg-black/50 text-white px-2 py-0.5 rounded text-[10px] font-mono">
+                                                #{ticket.nroTicket}
+                                            </span>
                                         </div>
+                                    </div>
 
-                                        {ticket.metodoPago && (
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        {/* Header removed from here to top image */}
+
+                                        {/* Event Info */}
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
+                                            {ticket.tipoTicket?.evento?.nombre || "Evento sin nombre"}
+                                        </h3>
+
+                                        <div className="space-y-3 mt-4">
                                             <div className="flex items-center text-gray-600">
-                                                <CreditCard className="w-4 h-4 mr-3 text-gray-400" />
-                                                <span className="text-sm font-medium capitalize">Pago: {ticket.metodoPago}</span>
+                                                <Calendar className="w-4 h-4 mr-3 text-gray-400" />
+                                                <span className="text-sm">
+                                                    {ticket.tipoTicket?.evento?.fechaHoraEvento
+                                                        ? new Date(ticket.tipoTicket.evento.fechaHoraEvento).toLocaleDateString('es-ES', {
+                                                            weekday: 'long',
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })
+                                                        : "Fecha por confirmar"}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center text-gray-600">
+                                                <Tag className="w-4 h-4 mr-3 text-gray-400" />
+                                                <span className="text-sm">Acceso: {ticket.tipoTicket?.acceso || "General"} {ticket.tipoTicket?.sector && `- Sector: ${ticket.tipoTicket.sector}`}</span>
+                                            </div>
+
+                                            {ticket.metodoPago && (
+                                                <div className="flex items-center text-gray-600">
+                                                    <CreditCard className="w-4 h-4 mr-3 text-gray-400" />
+                                                    <span className="text-sm font-medium capitalize">Pago: {ticket.metodoPago}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Footer / Action */}
+                                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+                                        <div className="text-sm font-semibold text-gray-900">
+                                            ${ticket.tipoTicket?.precio || 0}
+                                        </div>
+                                        {ticket.estado === 'pendiente_transferencia' ? (
+                                            (ticket as Ticket & { ofertaTransferenciaIdCliente?: number }).ofertaTransferenciaIdCliente === currentClienteId ? (
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleAcceptTransfer(ticket.nroTicket)}
+                                                        disabled={actionLoading}
+                                                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition"
+                                                    >
+                                                        Aceptar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleRejectTransfer(ticket.nroTicket)}
+                                                        disabled={actionLoading}
+                                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition"
+                                                    >
+                                                        Rechazar
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-purple-600 font-medium italic">
+                                                    Aguardando aceptación
+                                                </span>
+                                            )
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                {ticket.estado === 'pagado' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleOpenTransfer(ticket)}
+                                                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                            title="Transferir Ticket"
+                                                        >
+                                                            <Send className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleOpenRefund(ticket)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Solicitar Reembolso"
+                                                        >
+                                                            <RefreshCcw className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {ticket.tokenQr && ticket.estado === 'pagado' && (
+                                                    <button
+                                                        onClick={() => handleOpenQr(ticket)}
+                                                        className="flex items-center text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors ml-2"
+                                                    >
+                                                        <QrCode className="w-4 h-4 mr-2" />
+                                                        Ver QR
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
-                                {/* Footer / Action */}
-                                <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-                                    <div className="text-sm font-semibold text-gray-900">
-                                        ${ticket.tipoTicket?.precio || 0}
-                                    </div>
-                                    {ticket.estado === 'pendiente_transferencia' ? (
-                                        (ticket as Ticket & { ofertaTransferenciaIdCliente?: number }).ofertaTransferenciaIdCliente === currentClienteId ? (
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleAcceptTransfer(ticket.nroTicket)}
-                                                    disabled={actionLoading}
-                                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition"
-                                                >
-                                                    Aceptar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleRejectTransfer(ticket.nroTicket)}
-                                                    disabled={actionLoading}
-                                                    className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition"
-                                                >
-                                                    Rechazar
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span className="text-xs text-purple-600 font-medium italic">
-                                                Aguardando aceptación
-                                            </span>
-                                        )
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            {ticket.estado === 'pagado' && (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleOpenTransfer(ticket)}
-                                                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                        title="Transferir Ticket"
-                                                    >
-                                                        <Send className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleOpenRefund(ticket)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Solicitar Reembolso"
-                                                    >
-                                                        <RefreshCcw className="w-4 h-4" />
-                                                    </button>
-                                                </>
-                                            )}
-                                            {ticket.tokenQr && ticket.estado === 'pagado' && (
-                                                <button
-                                                    onClick={() => handleOpenQr(ticket)}
-                                                    className="flex items-center text-sm text-indigo-600 font-medium hover:text-indigo-800 transition-colors ml-2"
-                                                >
-                                                    <QrCode className="w-4 h-4 mr-2" />
-                                                    Ver QR
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
+                <QrModal
+                    isOpen={isModalOpen}
+                    onClose={handleCloseQr}
+                    ticket={selectedTicket}
+                />
+
+                {/* Modal Transferencia */}
+                {isTransferModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Send className="w-6 h-6 text-indigo-600" />
+                                ¿A quién querés transferir el ticket?
+                            </h3>
+                            <p className="text-gray-500 mb-6 text-sm">
+                                Ingresa el correo electrónico del usuario al que deseas transferir esta entrada. Esta acción no se puede deshacer.
+                            </p>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email del destinatario</label>
+                                    <input
+                                        type="email"
+                                        value={recipientEmail}
+                                        onChange={(e) => setRecipientEmail(e.target.value)}
+                                        placeholder="ejemplo@correo.com"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900"
+                                    />
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        onClick={() => setIsTransferModalOpen(false)}
+                                        className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleTransfer}
+                                        disabled={actionLoading || !recipientEmail}
+                                        className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50"
+                                    >
+                                        {actionLoading ? "Enviando..." : "Transferir"}
+                                    </button>
                                 </div>
                             </div>
-                        ))}
+                        </div>
                     </div>
                 )}
-            </div>
 
-            <QrModal
-                isOpen={isModalOpen}
-                onClose={handleCloseQr}
-                ticket={selectedTicket}
-            />
-
-            {/* Modal Transferencia */}
-            {isTransferModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Send className="w-6 h-6 text-indigo-600" />
-                            ¿A quién querés transferir el ticket?
-                        </h3>
-                        <p className="text-gray-500 mb-6 text-sm">
-                            Ingresa el correo electrónico del usuario al que deseas transferir esta entrada. Esta acción no se puede deshacer.
-                        </p>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email del destinatario</label>
-                                <input
-                                    type="email"
-                                    value={recipientEmail}
-                                    onChange={(e) => setRecipientEmail(e.target.value)}
-                                    placeholder="ejemplo@correo.com"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-900"
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-4">
+                {/* Modal Reembolso */}
+                {isRefundModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all">
+                            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <RefreshCcw className="w-6 h-6 text-red-600" />
+                                Solicitar Reembolso
+                            </h3>
+                            <p className="text-gray-500 mb-6 text-sm">
+                                ¿Estás seguro que deseas solicitar el reembolso de este ticket? Se validará la política de cancelación del evento.
+                            </p>
+                            <div className="flex gap-3">
                                 <button
-                                    onClick={() => setIsTransferModalOpen(false)}
+                                    onClick={() => setIsRefundModalOpen(false)}
                                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                                 >
                                     Cancelar
                                 </button>
                                 <button
-                                    onClick={handleTransfer}
-                                    disabled={actionLoading || !recipientEmail}
-                                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50"
+                                    onClick={handleRefund}
+                                    disabled={actionLoading}
+                                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
                                 >
-                                    {actionLoading ? "Enviando..." : "Transferir"}
+                                    {actionLoading ? "Procesando..." : "Confirmar Reembolso"}
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Modal Reembolso */}
-            {isRefundModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <RefreshCcw className="w-6 h-6 text-red-600" />
-                            Solicitar Reembolso
-                        </h3>
-                        <p className="text-gray-500 mb-6 text-sm">
-                            ¿Estás seguro que deseas solicitar el reembolso de este ticket? Se validará la política de cancelación del evento.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setIsRefundModalOpen(false)}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleRefund}
-                                disabled={actionLoading}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
-                            >
-                                {actionLoading ? "Procesando..." : "Confirmar Reembolso"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </RoleGuard>
     );
 }
