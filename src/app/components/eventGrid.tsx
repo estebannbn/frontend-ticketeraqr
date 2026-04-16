@@ -71,7 +71,7 @@ export const EventGrid: React.FC<EventGridProps> = ({ eventos, loading }) => {
                             </div>
                             <div className="flex items-center text-gray-600 text-sm">
                                 <MapPin className="w-4 h-4 mr-2 text-blue-500" />
-                                Online / Presencial
+                                {evento.ubicacion}
                             </div>
                             <div className="flex items-center text-gray-600 text-sm">
                                 <Tag className="w-4 h-4 mr-2 text-blue-500" />
