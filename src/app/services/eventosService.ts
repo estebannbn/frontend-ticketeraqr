@@ -15,11 +15,13 @@ export type ServiceResult<T> =
     | { success: false; error: string };
 
 // Obtener todos los eventos
-export async function getEventos(idOrganizacion?: number): Promise<ServiceResult<Evento[]>> {
+export async function getEventos(idOrganizacion?: number, includeAll: boolean = false): Promise<ServiceResult<Evento[]>> {
   try {
-    const url = idOrganizacion
-      ? `${baseUrl}/api/eventos?idOrganizacion=${idOrganizacion}`
-      : `${baseUrl}/api/eventos`;
+    const params = new URLSearchParams();
+    if (idOrganizacion) params.append("idOrganizacion", idOrganizacion.toString());
+    if (includeAll) params.append("todo", "true");
+
+    const url = `${baseUrl}/api/eventos?${params.toString()}`;
     const res = await fetch(url);
     if (!res.ok) {
         const error = await res.json();

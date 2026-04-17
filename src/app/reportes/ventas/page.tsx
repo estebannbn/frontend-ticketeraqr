@@ -56,7 +56,7 @@ export default function VentasReportePage() {
 
             const [res, evtsRes] = await Promise.all([
                 getVentasReport({ ...filters, idOrganizacion: idOrg }),
-                getEventos(idOrg ? Number(idOrg) : undefined)
+                getEventos(idOrg ? Number(idOrg) : undefined, true)
             ]);
 
             if (evtsRes.success) setEventos(evtsRes.data);
@@ -205,9 +205,10 @@ export default function VentasReportePage() {
                                 <option value="">Todos</option>
                                 {filteredEventos.map(e => {
                                     const isDuplicate = duplicateNames.has(e.nombre.toLowerCase());
+                                    const statusTag = e.estado && e.estado !== 'ACTIVO' ? ` [${e.estado}]` : "";
                                     return (
                                         <option key={e.idEvento} value={e.idEvento}>
-                                            {e.nombre} {isDuplicate ? `(${dayjs(e.fechaHoraEvento).format('DD/MM/YYYY HH:mm')})` : ""}
+                                            {e.nombre}{statusTag} {isDuplicate ? `(${dayjs(e.fechaHoraEvento).format('DD/MM/YYYY HH:mm')})` : ""}
                                         </option>
                                     );
                                 })}
