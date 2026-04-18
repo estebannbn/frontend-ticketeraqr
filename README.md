@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ticketera QR - Frontend
 
-## Getting Started
+Frontend application for event management, ticket sales, and QR code validation. Built with [Next.js](https://nextjs.org/) and [Tailwind CSS](https://tailwindcss.com/).
 
-First, run the development server:
+## 🚀 Key Technologies
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework:** Next.js
+- **Styling:** Tailwind CSS
+- **Language:** TypeScript
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📋 Prerequisites
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Make sure you have the following installed in your local environment:
+- [Node.js](https://nodejs.org/en/) (latest LTS version recommended)
+- Package manager: npm, yarn, or pnpm
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ⚙️ Environment Configuration
 
-## Learn More
+1. Copy the `.env.example` file to `.env` (if it exists) or create your own `.env` file.
+2. Configure the necessary variables, for example, the API URL:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:4000
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Installation and Execution
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Install project dependencies:
+   ```bash
+   npm install
+   ```
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📁 Project Structure
 
-## Deploy on Vercel
+- `/src/app`: Application routes and views.
+- `/src/app/components`: Reusable user interface components.
+- `/public`: Static assets like images and icons.
+- `/src/app/services`: API services
+- `/src/types`: TypeScript types.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📜 Available Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev`: Starts the development server.
+- `npm run build`: Builds the application for production.
+- `npm start`: Starts the production server (requires a previous build).
+- `npm run lint`: Runs the linter to find code errors.
